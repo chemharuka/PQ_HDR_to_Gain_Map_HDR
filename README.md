@@ -19,4 +19,6 @@ Batch convert all tiff file in a folder:
 
 Please change DIR of PQHDRtoGMHDR in heic_hdr.py before run.
 
+## Sample
 
+![DJI_1_0616_D](https://github.com/user-attachments/assets/da00b25d-b1b8-4e34-a0b8-20653e787f72)
