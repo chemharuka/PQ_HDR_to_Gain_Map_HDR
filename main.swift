@@ -34,8 +34,15 @@ func noiseReduction(inputImage: CIImage) -> CIImage? {
 func gammaAdjust(inputImage: CIImage) -> CIImage {
     let gammaAdjustFilter = CIFilter.gammaAdjust()
     gammaAdjustFilter.inputImage = inputImage
-    gammaAdjustFilter.power = 0.6
+    gammaAdjustFilter.power = 0.2
     return gammaAdjustFilter.outputImage!
+}
+
+func exposureAdjust(inputImage: CIImage) -> CIImage {
+    let exposureAdjustFilter = CIFilter.exposureAdjust()
+    exposureAdjustFilter.inputImage = inputImage
+    exposureAdjustFilter.ev = -1
+    return exposureAdjustFilter.outputImage!
 }
 
 func hdrtosdr(inputImage: CIImage) -> CIImage {
@@ -61,14 +68,20 @@ let url_export_heic = path_export.appendingPathComponent(filename)
 
 
 let hdrimage = CIImage(contentsOf: url_hdr, options: [.expandToHDR: true])
-let sdrimage = hdrtosdr(inputImage: hdrimage!)
-let gainMap = noiseReduction(
-    inputImage:gammaAdjust(
-        inputImage: subtractBlendMode(
-            inputImage: sdrimage,backgroundImage: hdrimage!
-            )
-        )
-    )
+let sdrimage = hdrtosdr(inputImage:hdrimage!)
+
+
+
+ let gainMap = noiseReduction(
+     inputImage:gammaAdjust(
+         inputImage: exposureAdjust(
+             inputImage: subtractBlendMode(
+                 inputImage: sdrimage,backgroundImage: hdrimage!
+                 )
+             )
+         )
+     )
+
 
 // codes below from: https://gist.github.com/kiding/fa4876ab4ddc797e3f18c71b3c2eeb3a?permalink_comment_id=4289828#gistcomment-4289828
 
@@ -78,7 +91,7 @@ var makerApple = imageProperties[kCGImagePropertyMakerAppleDictionary as String]
 
 // Set HDR-related tags as desired.
 makerApple["33"] = 0.0 // 0x21, seems to describe the global HDR headroom. Can be 0.0 or un-set when setting the tag below.
-makerApple["48"] = 1.0 // 0x30, seems to describe the effect of the gain map to the HDR effect, between 0.0 and 8.0 with 0.0 being the max.
+makerApple["48"] = 2.0 // 0x30, seems to describe the effect of the gain map to the HDR effect, between 0.0 and 8.0 with 0.0 being the max.
 
 // Set metadata back on image before export.
 imageProperties[kCGImagePropertyMakerAppleDictionary as String] = makerApple
@@ -91,5 +104,4 @@ try! ctx.writeHEIFRepresentation(of: modifiedImage,
                                  format: CIFormat.RGBA8,
                                  colorSpace: (sdrimage.colorSpace)!,
                                  options: [.hdrGainMapImage: gainMap!])
-
 
