@@ -1,6 +1,6 @@
-# macOS tool to Convert PQ HDR to Gain Map HDR
+# Convert PQ HDR to Gain Map HDR
 
-A macOS tool to convert HDR file to Adaptive HDR (Gain Map/ISO HDR)
+A macOS tool for converting HDR file to Adaptive HDR (Gain Map/ISO HDR)
 
 Include:
 
