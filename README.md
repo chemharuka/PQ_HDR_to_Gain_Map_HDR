@@ -22,3 +22,7 @@ Please change DIR of PQHDRtoGMHDR in heic_hdr.py before run.
 ## Sample
 
 ![DJI_1_0616_D](https://github.com/user-attachments/assets/da00b25d-b1b8-4e34-a0b8-20653e787f72)
+
+## Note
+
+It's better to limit PQ HDR range in +2 eV, to avoid losing hightlight details.
