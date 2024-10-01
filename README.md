@@ -21,7 +21,12 @@ Please change DIR of PQHDRtoGMHDR in heic_hdr.py before run.
 
 ## Sample
 
+sample 1:
 ![DJI_1_0616_D](https://github.com/user-attachments/assets/da00b25d-b1b8-4e34-a0b8-20653e787f72)
+
+sample 2:
+![DJI_1_0226_D](https://github.com/user-attachments/assets/b542e146-b2fc-48c9-9021-0dc469203bad)
+
 
 ## Note
 
