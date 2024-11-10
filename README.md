@@ -4,7 +4,7 @@ A macOS tool for converting HDR file to Adaptive HDR (Gain Map/ISO HDR)
 
 Include:
 
-1. PQHDRtoGMHDR, which convert png, tiff etc. PQ HDR file to Gain Map HDR. This code will read a image file as both SDR and HDR image, then calculate difference between two images as gain map. After denoise and gamma adjustment, combine SDR image with gain map to get GainMapHDR file.
+1. PQHDRtoGMHDR, which convert png, tiff etc. PQ HDR file to Gain Map HDR. This code will read a image file as both SDR and HDR image, then calculate difference between two images as gain map. After denoise, combine SDR image with gain map to get GainMapHDR file.
 2. heic_hdr.py, a ChatGPT generated python script to convert all TIFF file to HEIC.
 
 ## Usage
@@ -30,4 +30,4 @@ sample 2:
 
 ## Note
 
-It's better to limit PQ HDR range in +2 eV, to avoid losing hightlight details.
+FIXED: ~~It's better to limit PQ HDR range in +2 eV, to avoid losing hightlight details.~~
