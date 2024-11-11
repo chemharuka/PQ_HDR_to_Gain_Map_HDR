@@ -22,14 +22,6 @@ func subtractBlendMode(inputImage: CIImage, backgroundImage: CIImage) -> CIImage
     return colorBlendFilter.outputImage!
 }
 
-func noiseReduction(inputImage: CIImage) -> CIImage? {
-    let noiseReductionfilter = CIFilter.noiseReduction()
-    noiseReductionfilter.inputImage = inputImage
-    noiseReductionfilter.noiseLevel = 2
-    noiseReductionfilter.sharpness = 0
-    return noiseReductionfilter.outputImage
-}
-
 func linearTosRGB(inputImage: CIImage) -> CIImage {
     let linearTosRGB = CIFilter.linearToSRGBToneCurve()
     linearTosRGB.inputImage = inputImage
@@ -69,16 +61,14 @@ let hdrimage = CIImage(contentsOf: url_hdr, options: [.expandToHDR: true])
 let sdrimage = hdrtosdr(inputImage:hdrimage!)
 
 
-let gainMap = noiseReduction(
-            inputImage:exposureAdjust(
-                inputImage:linearTosRGB(
-                    inputImage:subtractBlendMode(
-                        inputImage:
-                            exposureAdjust(inputImage:sdrimage,inputEV: -3),backgroundImage: exposureAdjust(inputImage:hdrimage!,inputEV: -3)
-                        )
-                    ), inputEV: 0.5
-                )
+let gainMap = exposureAdjust(
+    inputImage:linearTosRGB(
+        inputImage:subtractBlendMode(
+            inputImage:
+                exposureAdjust(inputImage:sdrimage,inputEV: -3),backgroundImage: exposureAdjust(inputImage:hdrimage!,inputEV: -3)
             )
+        ), inputEV: 0.5
+    )
 
 // codes below from: https://gist.github.com/kiding/fa4876ab4ddc797e3f18c71b3c2eeb3a?permalink_comment_id=4289828#gistcomment-4289828
 
@@ -94,14 +84,15 @@ makerApple["48"] = 0.0 // 0x30, seems to describe the effect of the gain map to 
 imageProperties[kCGImagePropertyMakerAppleDictionary as String] = makerApple
 let modifiedImage = sdrimage.settingProperties(imageProperties)
 
+
 try! ctx.writeHEIFRepresentation(of: modifiedImage,
                                  to: url_export_heic,
                                  format: CIFormat.RGBA8,
                                  colorSpace: (sdrimage.colorSpace)!,
-                                 options: [.hdrGainMapImage: gainMap!])
+                                 options: [.hdrGainMapImage: gainMap])
 
 
 // debug
 //let filename2 = url_hdr.deletingPathExtension().appendingPathExtension("png").lastPathComponent
 //let url_export_heic2 = path_export.appendingPathComponent(filename2)
-//try! ctx.writePNGRepresentation(of: gainMap!, to: url_export_heic2, format: CIFormat.RGBA8, colorSpace: (sdrimage.colorSpace)!)
+//try! ctx.writePNGRepresentation(of: gainMap, to: url_export_heic2, format: CIFormat.RGBA8, colorSpace: (sdrimage.colorSpace)!)
