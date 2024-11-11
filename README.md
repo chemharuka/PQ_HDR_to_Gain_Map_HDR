@@ -21,6 +21,8 @@ Batch convert all tiff file in a folder:
 
 `cd PQ_HDR_to_Gain_Map_HDR`
 
+`chmod 711 ./PQHDRtoGMHDR`
+
 2. run heic_hdr.py (default run with 8 threads, change it accroding to your chip's big core.)
 
 `python3 ./heic_hdr.py $folder_for_convert`
