@@ -15,9 +15,17 @@ Convert PQ_HDR to ISO_HDR.heic:
 
 Batch convert all tiff file in a folder:
 
+1. Download all files in same folder:
+
+`git clone https://github.com/chemharuka/PQ_HDR_to_Gain_Map_HDR.git`
+
+`cd PQ_HDR_to_Gain_Map_HDR`
+
+2. run heic_hdr.py (default run with 8 threads, change it accroding to your chip's big core.)
+
 `./heic_hdr.py $folder_for_convert`
 
-Please change DIR of PQHDRtoGMHDR in heic_hdr.py before run.
+You may need to change DIR of PQHDRtoGMHDR in heic_hdr.py before running. (in line40)
 
 ## Sample
 
