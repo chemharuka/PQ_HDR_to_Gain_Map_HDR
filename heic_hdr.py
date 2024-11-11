@@ -37,7 +37,7 @@ def convert_to_heic(tif_file):
     # run PQHDRtoGMHDR, please edit the path before running!
 
     try:
-        result = subprocess.run(['/PATH/TO/PQHDRtoGMHDR', input_file_path, output_file_path], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        result = subprocess.run(['./PQHDRtoGMHDR', input_file_path, output_file_path], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print(f"Converted {tif_file} to {output_extension}")
     except subprocess.CalledProcessError as e:
         print(f"Error converting {tif_file}: {e.stderr.decode()}")
