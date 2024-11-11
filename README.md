@@ -27,7 +27,7 @@ Batch convert all tiff file in a folder:
 
 `python3 ./heic_hdr.py $folder_for_convert`
 
-You may need to change DIR of PQHDRtoGMHDR in heic_hdr.py before running. (in line40)
+You may need to change DIR of PQHDRtoGMHDR in heic_hdr.py before running. (in line44)
 
 ## Sample
 
