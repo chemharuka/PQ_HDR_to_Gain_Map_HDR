@@ -4,7 +4,7 @@ A macOS tool for converting HDR files to Adaptive HDR (Gain Map/ISO HDR)
 
 Include:
 
-1. PQHDRtoGMHDR, which convert png, tiff etc. HDR file (which supported by macOS, like PQ HDR / HLG HDR / UltraHDR) to Adaptive HDR (gain map heic file). This code will read a image file as both SDR and HDR image, then calculate difference between two images as gain map.
+1. PQHDRtoGMHDR, which convert png, tiff etc. HDR file (which supported by macOS, like PQ HDR / HLG HDR) to Adaptive HDR (gain map heic file). This code will read a image file as both SDR and HDR image, then calculate difference between two images as gain map.
 2. heic_hdr.py, a ChatGPT generated python script to convert all TIFF file to HEIC.
 
 ## Usage
