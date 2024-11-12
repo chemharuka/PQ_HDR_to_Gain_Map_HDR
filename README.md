@@ -45,4 +45,4 @@ sample 3:
 FIXED: ~~It's better to limit PQ HDR range in +2 eV, to avoid losing hightlight details.~~
 
 HDR headroom was limited to +2 eV, might improve in future.
-
+Not support UltraHDR now.
