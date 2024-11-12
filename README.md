@@ -32,14 +32,17 @@ You may need to change DIR of PQHDRtoGMHDR in heic_hdr.py before running. (in li
 ## Sample
 
 sample 1:
-![DJI_1_0616_D](https://github.com/user-attachments/assets/da00b25d-b1b8-4e34-a0b8-20653e787f72)
+![DJI_1_0616_D](https://github.com/user-attachments/assets/d4fd48bb-6561-496f-b1ab-083ee1ae8a95)
 
 sample 2:
-![DJI_1_0226_D](https://github.com/user-attachments/assets/b542e146-b2fc-48c9-9021-0dc469203bad)
+![DJI_1_0226_D](https://github.com/user-attachments/assets/0a718722-6939-41d3-844d-14517442de05)
 
+sample 3:
+![DJI_1_0927_D](https://github.com/user-attachments/assets/66da879e-d56a-4bae-8185-d2d7d462e10f)
 
 ## Note
 
 FIXED: ~~It's better to limit PQ HDR range in +2 eV, to avoid losing hightlight details.~~
 
 HDR headroom was limited to +2 eV, might improve in future.
+
