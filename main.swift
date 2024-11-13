@@ -82,7 +82,7 @@ let filename = url_hdr.deletingPathExtension().appendingPathExtension("heic").la
 let path_export = URL(fileURLWithPath: arguments[2])
 let url_export_heic = path_export.appendingPathComponent(filename)
 
-let hdrimage = CIImage(contentsOf: url_hdr)
+let hdrimage = CIImage(contentsOf: url_hdr, options: [.expandToHDR: true])
 let tonemapping_sdrimage = hdrimage?.applyingFilter("CIToneMapHeadroom", parameters: ["inputTargetHeadroom":1.0])
 
 let sdrimage = hdrtosdr(inputImage:hdrimage!)
@@ -92,7 +92,7 @@ let gainmap = toneCurve2(
             inputImage:exposureAdjust(
                 inputImage:linearTosRGB(
                     inputImage:subtractBlendMode(
-                        inputImage:exposureAdjust(inputImage:sdrimage,inputEV: -3),backgroundImage: exposureAdjust(inputImage:hdrimage!,inputEV: -3)
+                        inputImage:exposureAdjust(inputImage:sdrimage,inputEV: -3.5),backgroundImage: exposureAdjust(inputImage:hdrimage!,inputEV: -3.5)
                     )
                 ), inputEV: 0.5
             )
@@ -107,7 +107,7 @@ var imageProperties = tonemapping_sdrimage!.properties
 var makerApple = imageProperties[kCGImagePropertyMakerAppleDictionary as String] as? [String: Any] ?? [:]
 
 // Set HDR-related tags as desired.
-makerApple["33"] = 0.0 // 0x21, seems to describe the global HDR headroom. Can be 0.0 or un-set when setting the tag below.
+makerApple["33"] = 4.0 // 0x21, seems to describe the global HDR headroom. Can be 0.0 or un-set when setting the tag below.
 makerApple["48"] = 0.0 // 0x30, seems to describe the effect of the gain map to the HDR effect, between 0.0 and 8.0 with 0.0 being the max.
 
 // Set metadata back on image before export.
@@ -120,8 +120,6 @@ try! ctx.writeHEIFRepresentation(of: modifiedImage,
                                  format: CIFormat.RGBA8,
                                  colorSpace: (sdrimage.colorSpace)!,
                                  options: [.hdrGainMapImage: gainmap])
-
-
 
 // debug
 //let filename2 = url_hdr.deletingPathExtension().appendingPathExtension("png").lastPathComponent
