@@ -13,7 +13,6 @@ import ImageIO
 import CoreGraphics
 import Foundation
 import CoreImage.CIFilterBuiltins
-import UniformTypeIdentifiers
 
 let ctx = CIContext()
 
@@ -72,8 +71,8 @@ func hdrtosdr(inputImage: CIImage) -> CIImage {
 }
 
 let arguments = CommandLine.arguments
-guard arguments.count == 3 else {
-    print("Usage: PQHDRtoGMHDR <source file> <destination>")
+guard arguments.count > 2 else {
+    print("Usage: PQHDRtoGMHDR <source file> <destination> <options>")
     exit(1)
 }
 
@@ -82,23 +81,41 @@ let filename = url_hdr.deletingPathExtension().appendingPathExtension("heic").la
 let path_export = URL(fileURLWithPath: arguments[2])
 let url_export_heic = path_export.appendingPathComponent(filename)
 
+let imageoptions = arguments.dropFirst(3)
+var imagequality: Double? = 0.90
+var gainmaptype = false
+
+var index:Int = 0
+while index < imageoptions.count {
+    let option = arguments[index+3]
+    switch option {
+    case "-q": // Handle -q <value> option
+        // Check if there is a next value in the array
+        guard index + 1 < imageoptions.count else {
+            print("Error: The -q option requires a numeric value.")
+            exit(1)
+        }
+        if let value = Double(arguments[index + 4]) {
+            imagequality = value
+            index += 1 // Skip the next value
+        } else {
+            print("Error: The -q option must be followed by a valid numeric value.")
+            exit(1)
+        }
+    case "-g": // Handle -g option
+        gainmaptype = true
+    default:
+        print("Unknown option: \(option)")
+    }
+    index += 1
+}
+
+
 let hdrimage = CIImage(contentsOf: url_hdr, options: [.expandToHDR: true])
 let tonemapping_sdrimage = hdrimage?.applyingFilter("CIToneMapHeadroom", parameters: ["inputTargetHeadroom":1.0])
 
 let sdrimage = hdrtosdr(inputImage:hdrimage!)
-let gainmap = toneCurve2(
-    inputImage:toneCurve1(
-        inputImage:maximumComponent(
-            inputImage:exposureAdjust(
-                inputImage:linearTosRGB(
-                    inputImage:subtractBlendMode(
-                        inputImage:exposureAdjust(inputImage:sdrimage,inputEV: -3.5),backgroundImage: exposureAdjust(inputImage:hdrimage!,inputEV: -3.5)
-                    )
-                ), inputEV: 0.5
-            )
-        )
-    )
-)
+
 
 // codes below from: https://gist.github.com/kiding/fa4876ab4ddc797e3f18c71b3c2eeb3a?permalink_comment_id=4289828#gistcomment-4289828
 
@@ -114,14 +131,39 @@ makerApple["48"] = 0.0 // 0x30, seems to describe the effect of the gain map to 
 imageProperties[kCGImagePropertyMakerAppleDictionary as String] = makerApple
 let modifiedImage = tonemapping_sdrimage!.settingProperties(imageProperties)
 
+if gainmaptype {
+    let exportoptions = NSDictionary(dictionary:[kCGImageDestinationLossyCompressionQuality:imagequality ?? 0.9, CIImageRepresentationOption.hdrImage:hdrimage!])
+    try! ctx.writeHEIFRepresentation(of: modifiedImage,
+                                     to: url_export_heic,
+                                     format: CIFormat.RGBA8,
+                                     colorSpace: (sdrimage.colorSpace)!,
+                                     options:exportoptions as! [CIImageRepresentationOption : Any])
+} else {
+    let gainmap = toneCurve2(
+        inputImage:toneCurve1(
+            inputImage:maximumComponent(
+                inputImage:exposureAdjust(
+                    inputImage:linearTosRGB(
+                        inputImage:subtractBlendMode(
+                            inputImage:exposureAdjust(inputImage:sdrimage,inputEV: -3.5),backgroundImage: exposureAdjust(inputImage:hdrimage!,inputEV: -3.5)
+                        )
+                    ), inputEV: 0.5
+                )
+            )
+        )
+    )
+    let exportoptions = NSDictionary(dictionary:[kCGImageDestinationLossyCompressionQuality:imagequality ?? 0.9, CIImageRepresentationOption.hdrGainMapImage:gainmap])
+    try! ctx.writeHEIFRepresentation(of: modifiedImage,
+                                     to: url_export_heic,
+                                     format: CIFormat.RGBA8,
+                                     colorSpace: (sdrimage.colorSpace)!,
+                                     options:exportoptions as! [CIImageRepresentationOption : Any])
+}
 
-try! ctx.writeHEIFRepresentation(of: modifiedImage,
-                                 to: url_export_heic,
-                                 format: CIFormat.RGBA8,
-                                 colorSpace: (sdrimage.colorSpace)!,
-                                 options: [.hdrGainMapImage: gainmap])
+
 
 // debug
-//let filename2 = url_hdr.deletingPathExtension().appendingPathExtension("png").lastPathComponent
-//let url_export_heic2 = path_export.appendingPathComponent(filename2)
-//try! ctx.writePNGRepresentation(of: tonemapping_gainmap, to: url_export_heic2, format: CIFormat.RGBA8, colorSpace:CGColorSpace(name: CGColorSpace.displayP3)!)
+let filename2 = url_hdr.deletingPathExtension().appendingPathExtension("png").lastPathComponent
+let url_export_heic2 = path_export.appendingPathComponent(filename2)
+//try! ctx.writePNGRepresentation(of: tonemapping_sdrimage!, to: url_export_heic2, format: CIFormat.RGBA8, colorSpace:CGColorSpace(name: CGColorSpace.displayP3)!)
+
