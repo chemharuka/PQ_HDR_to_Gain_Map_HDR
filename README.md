@@ -9,9 +9,21 @@ Include:
 
 ## Usage
 
+### PQHDRtoGMHDR
+
 Convert any HDR to ISO_HDR.heic by PQHDRtoGMHDR:
 
-`./PQHDRtoGMHDR $file_dir $folder_dir`
+`./PQHDRtoGMHDR $file_dir $folder_dir $options`
+
+Options:
+
+-q, quality, between 0.0 to 1.0, default 0.90.
+
+-g, Use RGB gain map (default use luminance gain map), look pretty much the same, but the luminance gain map is much smaller.
+
+Sample： `./PQHDRtoGMHDR ~/Downloads/abc.png ~/Documents/ -q 0.95 -g`
+
+### heic_hdr.py
 
 Batch convert all tiff file in a folder by heic_hdr.py:
 
