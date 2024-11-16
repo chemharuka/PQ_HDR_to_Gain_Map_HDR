@@ -19,7 +19,7 @@ Options:
 
 -q, quality, between 0.0 to 1.0, default 0.90.
 
--g, another way to get gain ma, bigger size, not recommended.
+-g, another way to get gain map, more accurate exposure but bigger file size.
 
 Sample： `./PQHDRtoGMHDR ~/Downloads/abc.png ~/Documents/ -q 0.95 -g`
 
