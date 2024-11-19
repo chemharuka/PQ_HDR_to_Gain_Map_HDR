@@ -14,7 +14,7 @@ let ctx = CIContext()
 
 let arguments = CommandLine.arguments
 guard arguments.count > 2 else {
-    print("Usage: PQHDRtoGMHDR <source file> <destination folder> <options>\n       options:\n         -q <value>: image quality (default: 0.85)\n         -c <color space>: specify output color space (srgb, p3, rec2020)\n         -s: export tone mapped SDR image without HDR gain map\n         -p: export 10bit PQ HDR heic image")
+    print("Usage: PQHDRtoGMHDR <source file> <destination folder> <options>\n       options:\n         -q <value>: image quality (default: 0.85)\n         -c <color space>: specify output color space (srgb, p3, rec2020)\n         -d <color depth>: specify output color depth (default: 8 bits)\n         -s: export tone mapped SDR image without HDR gain map\n         -p: export 10bit PQ HDR heic image")
     exit(1)
 }
 
@@ -27,6 +27,7 @@ let imageoptions = arguments.dropFirst(3)
 var imagequality: Double? = 0.85
 var sdr_export: Bool = false
 var pq_export: Bool = false
+var bit_depth = CIFormat.RGBA8
 var color_space_list = ["srgb","p3","rec2020"]
 
 let hdr_image = CIImage(contentsOf: url_hdr, options: [.expandToHDR: true])
@@ -87,6 +88,21 @@ while index < imageoptions.count {
             exit(1)
         }
         pq_export = true
+    case "-d":
+        guard index + 1 < imageoptions.count else {
+            print("Error: The -d option requires bit depth argument.")
+            exit(1)
+        }
+        let bit_depth_argument = String(arguments[index + 4])
+        if bit_depth_argument == "8"{
+            index += 1
+        } else { if bit_depth_argument == "10"{
+            bit_depth = CIFormat.RGB10
+            index += 1
+        } else {
+            print("Error: Bit depth must be either 8 or 10.")
+            exit (1)
+        }}
     case "-c":
         guard index + 1 < imageoptions.count else {
             print("Error: The -c option requires color space argument.")
@@ -123,7 +139,7 @@ while sdr_export {
     let sdr_export_options = NSDictionary(dictionary:[kCGImageDestinationLossyCompressionQuality:imagequality ?? 0.85])
     try! ctx.writeHEIFRepresentation(of: tonemapped_sdrimage!,
                                      to: url_export_heic,
-                                     format: CIFormat.RGBA8,
+                                     format: bit_depth,
                                      colorSpace: CGColorSpace(name: sdr_color_space)!,
                                      options:sdr_export_options as! [CIImageRepresentationOption : Any])
     exit(0)
@@ -140,7 +156,7 @@ while pq_export {
 
 try! ctx.writeHEIFRepresentation(of: tonemapped_sdrimage!,
                                  to: url_export_heic,
-                                 format: CIFormat.RGBA8,
+                                 format: bit_depth,
                                  colorSpace: CGColorSpace(name: sdr_color_space)!,
                                  options: export_options as! [CIImageRepresentationOption : Any])
 exit(0)
@@ -148,5 +164,3 @@ exit(0)
 //let filename2 = url_hdr.deletingPathExtension().appendingPathExtension("png").lastPathComponent
 //let url_export_heic2 = path_export.appendingPathComponent(filename2)
 //try! ctx.writePNGRepresentation(of: gainmap!, to: url_export_heic2, format: CIFormat.RGBA8, colorSpace:CGColorSpace(name: CGColorSpace.displayP3)!)
-
-
