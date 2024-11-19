@@ -19,7 +19,7 @@ Options:
 
 -q <value>: image quality (default: 0.85)
 
--c <color space>: specify output color space (srgb, p3, rec2020)
+-c <color space>: specify output color space (srgb, p3, rec2020), default use source file's color space.
 
 -d <color depth>: specify output color depth (default: 8)
 
