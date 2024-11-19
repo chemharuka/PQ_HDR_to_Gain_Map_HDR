@@ -17,9 +17,16 @@ Convert any HDR to ISO_HDR.heic by PQHDRtoGMHDR:
 
 Options:
 
--q, quality, between 0.0 to 1.0, default 0.85.
+-q <value>: image quality (default: 0.85)
 
-Sample： `./PQHDRtoGMHDR ~/Downloads/abc.png ~/Documents/ -q 0.95`
+-c <color space>: specify output color space (srgb, p3, rec2020)
+
+-s: export tone mapped SDR image without HDR gain map
+
+-p: export 10bit PQ HDR heic image
+
+
+Sample： `./PQHDRtoGMHDR ~/Downloads/abc.png ~/Documents/ -q 0.95 -c rec2020`
 
 ### heic_hdr.py
 
