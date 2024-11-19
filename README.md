@@ -21,12 +21,14 @@ Options:
 
 -c <color space>: specify output color space (srgb, p3, rec2020)
 
+-d <color depth>: specify output color depth (default: 8)
+
 -s: export tone mapped SDR image without HDR gain map
 
 -p: export 10bit PQ HDR heic image
 
 
-Sample： `./PQHDRtoGMHDR ~/Downloads/abc.png ~/Documents/ -q 0.95 -c rec2020`
+Sample： `./PQHDRtoGMHDR ~/Downloads/abc.png ~/Documents/ -q 0.95 -d 10 -c rec2020`
 
 ### heic_hdr.py
 
