@@ -7,6 +7,8 @@ Include:
 1. PQHDRtoGMHDR, which convert png, tiff etc. HDR file (in PQ HDR / HLG HDR) to Adaptive HDR (gain map heic file). The program will read a image as both SDR and HDR image, then calculate difference between two images as gain map.
 2. heic_hdr.py, a ChatGPT generated python script to convert all TIFF file to HEIC.
 
+GUI program created by @vincenttsang [HDR-Gain-Map-Convert](https://github.com/vincenttsang/HDR-Gain-Map-Convert)
+
 ## Usage
 
 ### PQHDRtoGMHDR
@@ -46,9 +48,11 @@ Batch convert all tiff file in a folder by heic_hdr.py:
 
 2. run heic_hdr.py (default run with 8 threads, change it accroding to your chip's big core.)
 
-`python3 ./heic_hdr.py $folder_for_convert`
+`python3 ./heic_hdr.py $folder_for_convert $options`
 
-You may need to change DIR of PQHDRtoGMHDR in heic_hdr.py before running. (in line44)
+You may need to change DIR of PQHDRtoGMHDR in heic_hdr.py before running. (in line 44)
+
+Sample： `python3 ./heic_hdr.py ~/Documents/export/ -q 0.90 -c rec2020`
 
 ## Sample
 
