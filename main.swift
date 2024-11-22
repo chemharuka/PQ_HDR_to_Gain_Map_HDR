@@ -38,28 +38,27 @@ var sdr_color_space = CGColorSpace.displayP3
 var hdr_color_space = CGColorSpace.displayP3_PQ
 var hlg_color_space = CGColorSpace.displayP3_HLG
 
-let image_color_space = hdr_image?.colorSpace?.name
-if image_color_space == nil {} else {
-    if (image_color_space! as NSString).contains("709") {
-        sdr_color_space = CGColorSpace.itur_709
-        hdr_color_space = CGColorSpace.itur_709_PQ
-        hlg_color_space = CGColorSpace.itur_709_HLG
-    }
-    if (image_color_space! as NSString).contains("sRGB") {
-        sdr_color_space = CGColorSpace.itur_709
-        hdr_color_space = CGColorSpace.itur_709_PQ
-        hlg_color_space = CGColorSpace.itur_709_HLG
-    }
-    if (image_color_space! as NSString).contains("2100") {
-        sdr_color_space = CGColorSpace.itur_2020_sRGBGamma
-        hdr_color_space = CGColorSpace.itur_2100_PQ
-        hlg_color_space = CGColorSpace.itur_2100_HLG
-    }
-    if (image_color_space! as NSString).contains("2020") {
-        sdr_color_space = CGColorSpace.itur_2020_sRGBGamma
-        hdr_color_space = CGColorSpace.itur_2100_PQ
-        hlg_color_space = CGColorSpace.itur_2100_HLG
-    }
+let image_color_space = String(describing: hdr_image?.colorSpace)
+
+if image_color_space.contains("709") {
+    sdr_color_space = CGColorSpace.itur_709
+    hdr_color_space = CGColorSpace.itur_709_PQ
+    hlg_color_space = CGColorSpace.itur_709_HLG
+}
+if image_color_space.contains("sRGB") {
+    sdr_color_space = CGColorSpace.itur_709
+    hdr_color_space = CGColorSpace.itur_709_PQ
+    hlg_color_space = CGColorSpace.itur_709_HLG
+}
+if image_color_space.contains("2100") {
+    sdr_color_space = CGColorSpace.itur_2020_sRGBGamma
+    hdr_color_space = CGColorSpace.itur_2100_PQ
+    hlg_color_space = CGColorSpace.itur_2100_HLG
+}
+if image_color_space.contains("2020") {
+    sdr_color_space = CGColorSpace.itur_2020_sRGBGamma
+    hdr_color_space = CGColorSpace.itur_2100_PQ
+    hlg_color_space = CGColorSpace.itur_2100_HLG
 }
 
 var index:Int = 0
