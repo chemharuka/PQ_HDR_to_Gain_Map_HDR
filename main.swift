@@ -173,7 +173,7 @@ if (jpg_export && hlg_export) || (jpg_export && pq_export) {
 }
 if hlg_export && eight_bit {print("Warrning: Suggested to use 10-bit with HLG.")}
 if jpg_export && bit_depth == CIFormat.RGB10 {print("Warning: Color depth will be 8 when exporting JPEG.")}
-
+if pq_export && eight_bit {print("Warning: Color depth will be 10 when exporting PQ HDR.")}
 
 
 while sdr_export{
