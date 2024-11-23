@@ -33,7 +33,11 @@ Options:
 
 -h: export HLG HDR heic image (default in 10bit)
 
-Sample： `./PQHDRtoGMHDR ~/Downloads/abc.png ~/Documents/ -q 0.95 -d 10 -c rec2020`
+Sample command：
+
+ `./PQHDRtoGMHDR ~/Downloads/abc.png ~/Documents/ -q 0.95 -d 10 -c rec2020`
+
+ `./PQHDRtoGMHDR ~/Downloads/abc.tiff ~/Documents/ -q 0.80 -f jpg`
 
 ### heic_hdr.py
 
