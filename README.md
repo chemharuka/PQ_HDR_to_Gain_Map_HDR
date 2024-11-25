@@ -33,11 +33,19 @@ Options:
 
 -h: export HLG HDR heic image (default in 10bit)
 
+-g: export Google Photos compatible heic image \*\*
+
+-help: print help information
+
 Sample command：
 
  `./PQHDRtoGMHDR ~/Downloads/abc.png ~/Documents/ -q 0.95 -d 10 -c rec2020`
 
  `./PQHDRtoGMHDR ~/Downloads/abc.tiff ~/Documents/ -q 0.80 -f jpg`
+ 
+About Google Photos compatible export:
+
+Google photos only reads certain values ​​of "markerApple" to determine whether the image is HDR, so HDR images outputed by CIImageRepresentationOption.hdrImage cannot be identificated. To solve this problem, use CIImageRepresentationOption.hdrGainMapImage to output image. This may result in slower speed and slight change in brightness, but also smaller file size.
 
 ### heic_hdr.py
 
@@ -76,6 +84,6 @@ FIXED: ~~It's better to limit PQ HDR range in +2 eV, to avoid losing hightlight 
 
 FIXED: ~~HDR headroom was limited to +2 eV, might improve in future.~~
 
-Not support JPEG Gain Map HDR exported by Adobe.
+FIXED: ~~Not support HDR preview in Google Photos.~~
 
-Not support HDR preview in Google Photos.
+Not support JPEG Gain Map HDR exported by Adobe.
