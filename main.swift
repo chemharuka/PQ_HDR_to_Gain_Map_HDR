@@ -41,7 +41,6 @@ if hdr_image == nil {
     print("Error: No input image found.")
     exit(1)
 }
-let export_options = NSDictionary(dictionary:[kCGImageDestinationLossyCompressionQuality:imagequality ?? 0.85, CIImageRepresentationOption.hdrImage:hdr_image!])
 
 var sdr_color_space = CGColorSpace.displayP3
 var hdr_color_space = CGColorSpace.displayP3_PQ
@@ -175,6 +174,7 @@ if hlg_export && eight_bit {print("Warrning: Suggested to use 10-bit with HLG.")
 if jpg_export && bit_depth == CIFormat.RGB10 {print("Warning: Color depth will be 8 when exporting JPEG.")}
 if pq_export && eight_bit {print("Warning: Color depth will be 10 when exporting PQ HDR.")}
 
+let export_options = NSDictionary(dictionary:[kCGImageDestinationLossyCompressionQuality:imagequality ?? 0.85, CIImageRepresentationOption.hdrImage:hdr_image!])
 
 while sdr_export{
     let sdr_export_options = NSDictionary(dictionary:[kCGImageDestinationLossyCompressionQuality:imagequality ?? 0.85])
