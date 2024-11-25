@@ -76,4 +76,6 @@ FIXED: ~~It's better to limit PQ HDR range in +2 eV, to avoid losing hightlight 
 
 FIXED: ~~HDR headroom was limited to +2 eV, might improve in future.~~
 
-Not support UltraHDR.
+Not support JPEG Gain Map HDR exported by Adobe.
+
+Not support HDR preview in Google Photos.
