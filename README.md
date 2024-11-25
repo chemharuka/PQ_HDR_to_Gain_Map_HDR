@@ -45,7 +45,7 @@ Sample command：
  
 About Google Photos compatible export:
 
-Google photos only reads certain values ​​of "markerApple" to determine whether the image is HDR, so HDR images outputed by CIImageRepresentationOption.hdrImage cannot be identificated. To solve this problem, use CIImageRepresentationOption.hdrGainMapImage to output image. This may result in slower speed and slight change in brightness, but also smaller file size.
+/*/* Google photos only reads certain values ​​of "markerApple" to determine whether the image is HDR, so HDR images outputed by CIImageRepresentationOption.hdrImage cannot be identificated. To solve this problem, use CIImageRepresentationOption.hdrGainMapImage to output image. This may result in slower speed and slight change in brightness, but also smaller file size.
 
 ### heic_hdr.py
 
