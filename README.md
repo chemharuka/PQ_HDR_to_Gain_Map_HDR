@@ -17,7 +17,7 @@ Convert any HDR to ISO_HDR.heic by PQHDRtoGMHDR:
 
 `./PQHDRtoGMHDR $file_dir $folder_dir $options`
 
-Options:
+#### Options:
 
 -q \<value>: image quality (default: 0.85)
 
@@ -39,7 +39,7 @@ Options:
 
 -help: print help information
 
-Sample command：
+#### Sample command：
 
  `./PQHDRtoGMHDR ~/Downloads/abc.png ~/Documents/ -q 0.95 -d 10 -c rec2020`
 
@@ -49,9 +49,12 @@ convert gain map abc.avif to gain map heic file and keep base image:
  
  `./PQHDRtoGMHDR ~/Downloads/abc.avif ~/Documents/ -b ./Downloads/abc.avif` 
 
-Please note: using a specific base photo will lead to more information in gain map for correct HDR mapping, resulting in a larger file size (approximately double)
+#### Note: 
+
+1. using a specific base photo will lead to more information in gain map for correct HDR mapping, resulting in a larger file size (approximately double)
+2. 10 bit heic files are about twice as large as 8 bit files.
  
-\*\* Google Photos compatible with monochrome gain map:
+#### \*\* Google Photos compatible with monochrome gain map:
 
 HDR images output using CIImageRepresentationOption.hdrImage will generate RGB gain map. Output image through CIImageRepresentationOption.hdrGainMapImage will generate monochrome gain map. This method will output more slowly and there will be slight changes in brightness, but the file size will be smaller.
 
@@ -73,7 +76,13 @@ Batch convert all tiff file in a folder by heic_hdr.py:
 
 You may need to change DIR of PQHDRtoGMHDR in heic_hdr.py before running. (in line 44)
 
-Sample： `python3 ./heic_hdr.py ~/Documents/export/ -q 0.90 -c rec2020`
+####Sample：
+
+`python3 ./heic_hdr.py ~/Documents/export/ -q 0.90 -c rec2020`
+
+#### Note: 
+
+1. Not support specifying base image.
 
 ## Sample
 
@@ -86,7 +95,7 @@ sample 2:
 sample 3:
 ![DJI_1_0927_D](https://github.com/user-attachments/assets/66da879e-d56a-4bae-8185-d2d7d462e10f)
 
-## Note
+## Notes
 
 FIXED: ~~It's better to limit PQ HDR range in +2 eV, to avoid losing hightlight details.~~
 
@@ -94,4 +103,4 @@ FIXED: ~~HDR headroom was limited to +2 eV, might improve in future.~~
 
 FIXED: ~~Not support HDR preview in Google Photos.~~
 
-Not support JPEG Gain Map HDR exported by Adobe.
+Not support input JPEG Gain Map HDR exported by Adobe.
