@@ -10,11 +10,10 @@ import Foundation
 import CoreImage.CIFilterBuiltins
 
 let ctx = CIContext()
-
-
+let help_info = "Usage: PQHDRtoGMHDR <source file> <destination folder> <options>\n       options:\n         -q <value>: image quality (default: 0.85)\n         -b <file_path>: specify the base image, which will be output in RGB gain map format\n         -f <format>: export image in heic or jpg (default: heic)\n         -c <color space>: specify output color space (srgb, p3, rec2020)\n         -d <color depth>: specify output color depth (default: 8)\n         -g: output monochrome gain map for solving compatibility issue\n         -s: export tone mapped SDR image without HDR gain map\n         -p: export 10bit PQ HDR heic image\n         -h: export HLG HDR heic image (default in 10bit)\n         -help: print help information"
 let arguments = CommandLine.arguments
 guard arguments.count > 2 else {
-    print("Usage: PQHDRtoGMHDR <source file> <destination folder> <options>\n       options:\n         -q <value>: image quality (default: 0.85)\n         -f <format>: export image in heic or jpg (default: heic)\n         -c <color space>: specify output color space (srgb, p3, rec2020)\n         -d <color depth>: specify output color depth (default: 8)\n         -s: export tone mapped SDR image without HDR gain map\n         -p: export 10bit PQ HDR heic image\n         -h: export HLG HDR heic image (default in 10bit)\n         -g: export Google Photos compatible heic image\n         -help: print help information")
+    print(help_info)
     exit(1)
 }
 
@@ -25,18 +24,19 @@ let path_export = URL(fileURLWithPath: arguments[2])
 let url_export_heic = path_export.appendingPathComponent(filename)
 let url_export_jpg = path_export.appendingPathComponent(filename_jpg)
 let imageoptions = arguments.dropFirst(3)
+var base_image_url : URL?
 
 var imagequality: Double? = 0.85
+var base_image_bool : Bool = false
 var sdr_export: Bool = false
 var pq_export: Bool = false
 var hlg_export: Bool = false
 var jpg_export: Bool = false
 var bit_depth = CIFormat.RGBA8
 var eight_bit: Bool = false
-var google_photo: Bool = false
+var gain_map_mono: Bool = false
 
 let hdr_image = CIImage(contentsOf: url_hdr, options: [.expandToHDR: true])
-let tonemapped_sdrimage = hdr_image?.applyingFilter("CIToneMapHeadroom", parameters: ["inputTargetHeadroom":1.0])
 
 if hdr_image == nil {
     print("Error: No input image found.")
@@ -91,6 +91,14 @@ while index < imageoptions.count {
             print("Error: The -q option requires a valid numeric value.")
             exit(1)
         }
+    case "-b":
+        guard index + 1 < imageoptions.count else {
+            print("Error: The -b option requires a argument.")
+            exit(1)
+        }
+        base_image_url = URL(fileURLWithPath: arguments[index + 4])
+        base_image_bool = true
+        index += 1
     case "-s":
         sdr_export = true
     case "-p":
@@ -98,7 +106,7 @@ while index < imageoptions.count {
     case "-h":
         hlg_export = true
     case "-g":
-        google_photo = true
+        gain_map_mono = true
     case "-d":
         guard index + 1 < imageoptions.count else {
             print("Error: The -d option requires a argument.")
@@ -157,7 +165,7 @@ while index < imageoptions.count {
         }
         index += 1 // Skip the next value
     case "-help":
-        print("Usage: PQHDRtoGMHDR <source file> <destination folder> <options>\n       options:\n         -q <value>: image quality (default: 0.85)\n         -f <format>: export image in heic or jpg (default: heic)\n         -c <color space>: specify output color space (srgb, p3, rec2020)\n         -d <color depth>: specify output color depth (default: 8)\n         -s: export tone mapped SDR image without HDR gain map\n         -p: export 10bit PQ HDR heic image\n         -h: export HLG HDR heic image (default in 10bit)\n         -help: print help information")
+        print(help_info)
         exit(1)
     default:
         print("Warrning: Unknown option: \(option)")
@@ -165,7 +173,7 @@ while index < imageoptions.count {
     index += 1
 }
 
-if [pq_export, hlg_export, sdr_export, google_photo].filter({$0}).count >= 2 {
+if [pq_export, hlg_export, sdr_export, gain_map_mono, base_image_bool].filter({$0}).count >= 2 {
     print("Error: Only one export format can be used.")
     exit(1)
 }
@@ -179,6 +187,24 @@ if pq_export && eight_bit {print("Warning: Color depth will be 10 when exporting
 
 
 let export_options = NSDictionary(dictionary:[kCGImageDestinationLossyCompressionQuality:imagequality ?? 0.85, CIImageRepresentationOption.hdrImage:hdr_image!])
+var tonemapped_sdrimage : CIImage?
+
+if base_image_bool{
+    if CIImage(contentsOf: base_image_url!) == nil {
+        print("Warning: Could not load base image, will generate base image by tone mapping.")
+        tonemapped_sdrimage = hdr_image?.applyingFilter("CIToneMapHeadroom", parameters: ["inputTargetHeadroom":1.0])
+    }
+    else {
+        tonemapped_sdrimage = CIImage(contentsOf: base_image_url!)
+    }
+} else {
+    tonemapped_sdrimage = hdr_image?.applyingFilter("CIToneMapHeadroom", parameters: ["inputTargetHeadroom":1.0])
+}
+
+if tonemapped_sdrimage == nil {
+    print("Error: Could not generate tone mapped image.")
+    exit(1)
+}
 
 while sdr_export{
     let sdr_export_options = NSDictionary(dictionary:[kCGImageDestinationLossyCompressionQuality:imagequality ?? 0.85])
@@ -217,7 +243,7 @@ while pq_export {
     exit(0)
 }
 
-if !google_photo {
+if !gain_map_mono {
     if jpg_export {
         try! ctx.writeJPEGRepresentation(of: tonemapped_sdrimage!,
                                          to: url_export_jpg,
@@ -233,85 +259,101 @@ if !google_photo {
     exit(0)
 }
 
-// export Google Photos compatible heic image. Due to some compatibility issues
-// (Google photos only reads certain values ​​of "markerApple" to determine whether the image is HDR),
-// HDR images output using CIImageRepresentationOption.hdrImage cannot be recognized by Google Photos.
-// To solve this problem, output image through CIImageRepresentationOption.hdrGainMapImage.
+// export monochrome gain map photo which compatible with Google Photos.
+// HDR images output using CIImageRepresentationOption.hdrImage will generate RGB gain map.
+// Output image through CIImageRepresentationOption.hdrGainMapImage will generate monochrome gain map.
 // This method will output more slowly and there will be slight changes in brightness,
 // but the file size will be smaller.
 
-let temporaryDirectory = FileManager.default.temporaryDirectory
-let virtualDirectoryURL = temporaryDirectory.appendingPathComponent("VirtualDirectory")
-try FileManager.default.createDirectory(at: virtualDirectoryURL, withIntermediateDirectories: true, attributes: nil)
+func subtractBlendMode(inputImage: CIImage, backgroundImage: CIImage) -> CIImage {
+    let colorBlendFilter = CIFilter.subtractBlendMode()
+    colorBlendFilter.inputImage = inputImage
+    colorBlendFilter.backgroundImage = backgroundImage
+    return colorBlendFilter.outputImage!
+}
 
-let temp_gmhdr_file_name = "gainmaphdr.heic"
-let temp_gmhdr_file_url = virtualDirectoryURL.appendingPathComponent(temp_gmhdr_file_name)
-let temp_export_options = NSDictionary(dictionary:[kCGImageDestinationLossyCompressionQuality:1.0, CIImageRepresentationOption.hdrImage:hdr_image!])
-try! ctx.writeHEIFRepresentation(of: tonemapped_sdrimage!,
-                                 to: temp_gmhdr_file_url,
-                                 format: CIFormat.RGBA8,
-                                 colorSpace: CGColorSpace(name: sdr_color_space)!,
-                                 options: temp_export_options as! [CIImageRepresentationOption : Any])
+func linearTosRGB(inputImage: CIImage) -> CIImage {
+    let linearTosRGB = CIFilter.linearToSRGBToneCurve()
+    linearTosRGB.inputImage = inputImage
+    return linearTosRGB.outputImage!
+}
 
-let temp_hdr_image = CIImage(contentsOf: temp_gmhdr_file_url, options: [.expandToHDR: true])
-let headroom_value = temp_hdr_image!.properties["Headroom"]
-let gainmap_image = CIImage(contentsOf: temp_gmhdr_file_url, options: [.auxiliaryHDRGainMap: true])
-let output_image = tonemapped_sdrimage!.applyingGainMap(gainmap_image!, headroom: headroom_value as! Float)
-var imageProperties = temp_hdr_image!.properties
-var makerApple = imageProperties[kCGImagePropertyMakerAppleDictionary as String] as? [String: Any] ?? [:]
-let stops = log2(headroom_value as! Float)
-var gamma_value : Double = 2.2
+func exposureAdjust(inputImage: CIImage, inputEV: Float) -> CIImage {
+    let exposureAdjustFilter = CIFilter.exposureAdjust()
+    exposureAdjustFilter.inputImage = inputImage
+    exposureAdjustFilter.ev = inputEV
+    return exposureAdjustFilter.outputImage!
+}
 
-//print("\(String(describing: headroom_value))")
-//print("\(stops)")
+func maximumComponent(inputImage: CIImage) -> CIImage {
+    let maximumComponentFilter = CIFilter.maximumComponent()
+    maximumComponentFilter.inputImage = inputImage
+    return maximumComponentFilter.outputImage!
+}
+
+func toneCurve1(inputImage: CIImage) -> CIImage {
+    let toneCurveFilter = CIFilter.toneCurve()
+    toneCurveFilter.inputImage = inputImage
+    toneCurveFilter.point0 = CGPoint(x: 0.0, y: 0.61)
+    toneCurveFilter.point1 = CGPoint(x: 0.5, y: 0.63)
+    toneCurveFilter.point2 = CGPoint(x: 0.75, y: 0.76)
+    toneCurveFilter.point3 = CGPoint(x: 0.9, y: 0.91)
+    toneCurveFilter.point4 = CGPoint(x: 1.0, y: 1.0)
+    return toneCurveFilter.outputImage!
+}
+
+func colorClamp(inputImage: CIImage) -> CIImage {
+    let colorClampFilter = CIFilter.colorClamp()
+    colorClampFilter.inputImage = inputImage
+    colorClampFilter.minComponents = CIVector(x: 0.04, y: 0.04, z: 0.04, w: 0)
+    colorClampFilter.maxComponents = CIVector (x: 1, y: 1, z: 1, w: 1)
+    return colorClampFilter.outputImage!
+}
 
 func gammaAdjust(inputImage: CIImage) -> CIImage {
     let gammaAdjustFilter = CIFilter.gammaAdjust()
     gammaAdjustFilter.inputImage = inputImage
-    gammaAdjustFilter.power = Float(gamma_value)
+    gammaAdjustFilter.power = 1/2.2
     return gammaAdjustFilter.outputImage!
 }
 
-func toneCurve(inputImage: CIImage) -> CIImage {
-    let toneCurveFilter = CIFilter.toneCurve()
-    toneCurveFilter.inputImage = inputImage
-    toneCurveFilter.point0 = CGPoint(x: 0, y: pow(0.5,1/gamma_value))   //0.5^(1/gamma)
-    toneCurveFilter.point1 = CGPoint(x: 0.5, y: (1+pow(0.5,1/gamma_value))/2)
-    toneCurveFilter.point2 = CGPoint(x: 1, y: 1)
-    return toneCurveFilter.outputImage!
+func hdrtosdr(inputImage: CIImage) -> CIImage {
+    let imagedata = ctx.tiffRepresentation(of: inputImage,
+                                           format: CIFormat.RGBA8,
+                                           colorSpace: CGColorSpace(name: CGColorSpace.displayP3)!
+    )
+    let sdrimage = CIImage(data: imagedata!)
+    return sdrimage!
 }
 
-let gamma_gainmap_image = toneCurve(inputImage:gammaAdjust(inputImage: gainmap_image!))
+let sdr_image = hdrtosdr(inputImage:hdr_image!)
+let subtracted_image = subtractBlendMode(
+    inputImage:exposureAdjust(inputImage:sdr_image,inputEV: -3),backgroundImage: exposureAdjust(inputImage:hdr_image!,inputEV: -3)
+)
+let gain_map = gammaAdjust(inputImage:colorClamp(inputImage:maximumComponent(inputImage:subtracted_image)))
+let tone_mapped_gain_map = toneCurve1(inputImage:gain_map)
 
-switch stops {
-case let x where x >= 3:
-    makerApple["33"] = 1.0
-    makerApple["48"] = 0.0
-case 2.3..<3:
-    makerApple["33"] = 1.0
-    makerApple["48"] = (3 - stops)/70
-case 1.8..<2.3:
-    makerApple["33"] = 1.0
-    makerApple["48"] = (2.303 - stops)/0.303
-case 1.6..<1.8:
-    makerApple["33"] = 0.0
-    makerApple["48"] = (1.8 - stops)/20
-default:
-    makerApple["33"] = 0.0
-    makerApple["48"] = (1.601 - stops)/0.101
-}
-
+var imageProperties = hdr_image!.properties
+var makerApple = imageProperties[kCGImagePropertyMakerAppleDictionary as String] as? [String: Any] ?? [:]
+makerApple["33"] = 1.0
+makerApple["48"] = 0.0
 imageProperties[kCGImagePropertyMakerAppleDictionary as String] = makerApple
+
 let modifiedImage = tonemapped_sdrimage!.settingProperties(imageProperties)
+let alt_export_options = NSDictionary(dictionary:[kCGImageDestinationLossyCompressionQuality:imagequality ?? 0.85, CIImageRepresentationOption.hdrGainMapImage:tone_mapped_gain_map])
 
-let alt_export_options = NSDictionary(dictionary:[kCGImageDestinationLossyCompressionQuality:imagequality ?? 0.85, CIImageRepresentationOption.hdrGainMapImage:gamma_gainmap_image])
-
-try! ctx.writeHEIFRepresentation(of: modifiedImage,
-                                 to: url_export_heic,
-                                 format: bit_depth,
-                                 colorSpace: CGColorSpace(name: sdr_color_space)!,
-                                 options: alt_export_options as! [CIImageRepresentationOption : Any])
-
+if jpg_export {
+    try! ctx.writeJPEGRepresentation(of: modifiedImage,
+                                     to: url_export_jpg,
+                                     colorSpace: CGColorSpace(name: sdr_color_space)!,
+                                     options:alt_export_options as! [CIImageRepresentationOption : Any])
+} else {
+    try! ctx.writeHEIFRepresentation(of: modifiedImage,
+                                     to: url_export_heic,
+                                     format: bit_depth,
+                                     colorSpace: CGColorSpace(name: sdr_color_space)!,
+                                     options: alt_export_options as! [CIImageRepresentationOption : Any])
+}
 exit(0)
 // debug
 //let filename2 = url_hdr.deletingPathExtension().appendingPathExtension("png").lastPathComponent

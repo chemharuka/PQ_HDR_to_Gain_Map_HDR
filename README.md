@@ -21,19 +21,21 @@ Options:
 
 -q \<value>: image quality (default: 0.85)
 
+-b \<file_path>: specify the base image, which will be output in RGB gain map format.
+
 -f \<format>: export image in heic or jpg (default: heic)
 
 -c \<color space>: output color space (srgb, p3, rec2020), default use source file's color space.
 
 -d \<color depth>: output color depth (default: 8)
 
+-g: output in monochrome gain map for solving compatibility issue \*\*
+
 -s: export tone mapped SDR image without HDR gain map
 
 -p: export 10 bits PQ HDR heic image
 
 -h: export HLG HDR heic image (default in 10bit)
-
--g: export Google Photos compatible heic image \*\*
 
 -help: print help information
 
@@ -43,9 +45,13 @@ Sample command：
 
  `./PQHDRtoGMHDR ~/Downloads/abc.tiff ~/Documents/ -q 0.80 -f jpg`
  
-\*\* Google Photos compatible export:
+convert abc.tiff to gain map heic file and using abc.avif as base image:
+ 
+ `./PQHDRtoGMHDR ~/Downloads/abc.tiff ~/Documents/ -b ./Downloads/abc.avif` 
+ 
+\*\* Google Photos compatible with monochrome gain map:
 
-Google photos only reads certain values ​​of "markerApple" to determine whether the image is HDR, so HDR images outputed by CIImageRepresentationOption.hdrImage cannot be identificated. To solve this problem, use CIImageRepresentationOption.hdrGainMapImage to output image. This may result in slower speed and slight change in brightness, but also smaller file size.
+HDR images output using CIImageRepresentationOption.hdrImage will generate RGB gain map. Output image through CIImageRepresentationOption.hdrGainMapImage will generate monochrome gain map. This method will output more slowly and there will be slight changes in brightness, but the file size will be smaller.
 
 ### heic_hdr.py
 
