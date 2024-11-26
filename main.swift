@@ -10,7 +10,7 @@ import Foundation
 import CoreImage.CIFilterBuiltins
 
 let ctx = CIContext()
-let help_info = "Usage: PQHDRtoGMHDR <source file> <destination folder> <options>\n       options:\n         -q <value>: image quality (default: 0.85)\n         -b <file_path>: specify the base image, which will be output in RGB gain map format\n         -f <format>: export image in heic or jpg (default: heic)\n         -c <color space>: specify output color space (srgb, p3, rec2020)\n         -d <color depth>: specify output color depth (default: 8)\n         -g: output monochrome gain map for solving compatibility issue\n         -s: export tone mapped SDR image without HDR gain map\n         -p: export 10bit PQ HDR heic image\n         -h: export HLG HDR heic image (default in 10bit)\n         -help: print help information"
+let help_info = "Usage: PQHDRtoGMHDR <source file> <destination folder> <options>\n       options:\n         -q <value>: image quality (default: 0.85)\n         -b <base_photo>: specify the base photo and output in RGB gain map format\n         -c <color space>: specify output color space (srgb, p3, rec2020)\n         -d <color depth>: specify output color depth (default: 8)\n         -g: output monochrome gain map for solving compatibility issue\n         -s: export tone mapped SDR image without HDR gain map\n         -p: export 10bit PQ HDR heic image\n         -h: export HLG HDR heic image (default in 10bit)\n         -j : export image in JPEG format\n         -help: print help information"
 let arguments = CommandLine.arguments
 guard arguments.count > 2 else {
     print(help_info)
@@ -105,6 +105,8 @@ while index < imageoptions.count {
         pq_export = true
     case "-h":
         hlg_export = true
+    case "-j":
+        jpg_export = true
     case "-g":
         gain_map_mono = true
     case "-d":
@@ -148,22 +150,6 @@ while index < imageoptions.count {
                 exit(1)
         }
         index += 1 // Skip the next value
-    case "-f":
-        guard index + 1 < imageoptions.count else {
-            print("Error: The -f option requires image format argument. (heic, jpg)")
-            exit(1)
-        }
-        let export_format = arguments[index + 4]
-        switch export_format {
-            case "heic","h","heif":
-                ()
-            case "jpg","j","jpeg":
-                jpg_export = true
-            default:
-                print("Error: The -f option requires image format argument. (heic, jpg)")
-                exit(1)
-        }
-        index += 1 // Skip the next value
     case "-help":
         print(help_info)
         exit(1)
@@ -187,18 +173,18 @@ if pq_export && eight_bit {print("Warning: Color depth will be 10 when exporting
 
 
 let export_options = NSDictionary(dictionary:[kCGImageDestinationLossyCompressionQuality:imagequality ?? 0.85, CIImageRepresentationOption.hdrImage:hdr_image!])
+
 var tonemapped_sdrimage : CIImage?
+
+tonemapped_sdrimage = hdr_image?.applyingFilter("CIToneMapHeadroom", parameters: ["inputSourceHeadroom":16.0,"inputTargetHeadroom":1.0])
 
 if base_image_bool{
     if CIImage(contentsOf: base_image_url!) == nil {
         print("Warning: Could not load base image, will generate base image by tone mapping.")
-        tonemapped_sdrimage = hdr_image?.applyingFilter("CIToneMapHeadroom", parameters: ["inputTargetHeadroom":1.0])
     }
     else {
         tonemapped_sdrimage = CIImage(contentsOf: base_image_url!)
     }
-} else {
-    tonemapped_sdrimage = hdr_image?.applyingFilter("CIToneMapHeadroom", parameters: ["inputTargetHeadroom":1.0])
 }
 
 if tonemapped_sdrimage == nil {
@@ -294,10 +280,10 @@ func maximumComponent(inputImage: CIImage) -> CIImage {
 func toneCurve1(inputImage: CIImage) -> CIImage {
     let toneCurveFilter = CIFilter.toneCurve()
     toneCurveFilter.inputImage = inputImage
-    toneCurveFilter.point0 = CGPoint(x: 0.0, y: 0.61)
-    toneCurveFilter.point1 = CGPoint(x: 0.5, y: 0.63)
-    toneCurveFilter.point2 = CGPoint(x: 0.75, y: 0.76)
-    toneCurveFilter.point3 = CGPoint(x: 0.9, y: 0.91)
+    toneCurveFilter.point0 = CGPoint(x: 0.0, y: 0.7)
+    toneCurveFilter.point1 = CGPoint(x: 0.5, y: 0.74)
+    toneCurveFilter.point2 = CGPoint(x: 0.74, y: 0.90)
+    toneCurveFilter.point3 = CGPoint(x: 0.80, y: 0.98)
     toneCurveFilter.point4 = CGPoint(x: 1.0, y: 1.0)
     return toneCurveFilter.outputImage!
 }
@@ -305,7 +291,7 @@ func toneCurve1(inputImage: CIImage) -> CIImage {
 func colorClamp(inputImage: CIImage) -> CIImage {
     let colorClampFilter = CIFilter.colorClamp()
     colorClampFilter.inputImage = inputImage
-    colorClampFilter.minComponents = CIVector(x: 0.04, y: 0.04, z: 0.04, w: 0)
+    colorClampFilter.minComponents = CIVector(x: 0.02, y: 0.02, z: 0.02, w: 0)
     colorClampFilter.maxComponents = CIVector (x: 1, y: 1, z: 1, w: 1)
     return colorClampFilter.outputImage!
 }
@@ -336,7 +322,7 @@ let tone_mapped_gain_map = toneCurve1(inputImage:gain_map)
 var imageProperties = hdr_image!.properties
 var makerApple = imageProperties[kCGImagePropertyMakerAppleDictionary as String] as? [String: Any] ?? [:]
 makerApple["33"] = 1.0
-makerApple["48"] = 0.0
+makerApple["48"] = 0.0096867 //headroom = 5
 imageProperties[kCGImagePropertyMakerAppleDictionary as String] = makerApple
 
 let modifiedImage = tonemapped_sdrimage!.settingProperties(imageProperties)
