@@ -51,9 +51,9 @@ convert gain map abc.avif to gain map heic file and keep base image:
 
 #### Note: 
 
-1. using a specific base photo will lead to more information in gain map for correct HDR mapping, resulting in a larger file size (approximately double)
-2. 10 bit heic files are about twice as large as 8 bit files.
-3. \*\* Google Photos compatible with monochrome gain map.
+1. Using a specific base photo will result larger file size (approximately double)
+2. Exporting 10 bit heic files will result larger file size (approximately double)
+3. \*\* Monochrome gain map compatible with Google Photos.
 
 ### heic_hdr.py
 
@@ -79,7 +79,7 @@ You may need to change DIR of PQHDRtoGMHDR in heic_hdr.py before running. (in li
 
 #### Note: 
 
-1. Not support specifying base image.
+1. Not support specifying base image in batch converting.
 
 ## Sample
 
@@ -100,4 +100,6 @@ FIXED: ~~HDR headroom was limited to +2 eV, might improve in future.~~
 
 FIXED: ~~Not support HDR preview in Google Photos.~~
 
-Not support input JPEG Gain Map HDR exported by Adobe.
+Not support input JPEG RGB Gain Map HDR exported by Adobe.
+
+Not support input TIFF Gain Map HDR exported by Adobe.
