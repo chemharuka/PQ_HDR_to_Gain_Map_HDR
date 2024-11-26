@@ -23,8 +23,6 @@ Convert any HDR to ISO_HDR.heic by PQHDRtoGMHDR:
 
 -b \<file_path>: specify the base image and output in RGB gain map format.
 
--f \<format>: export image in heic or jpg (default: heic)
-
 -c \<color space>: output color space (srgb, p3, rec2020), default use source file's color space.
 
 -d \<color depth>: output color depth (default: 8)
@@ -32,6 +30,8 @@ Convert any HDR to ISO_HDR.heic by PQHDRtoGMHDR:
 -g: output in monochrome gain map for solving compatibility issue \*\*
 
 -s: export tone mapped SDR image without HDR gain map
+
+-j: export image in JPEG format
 
 -p: export 10 bits PQ HDR heic image
 
