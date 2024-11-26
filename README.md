@@ -53,10 +53,7 @@ convert gain map abc.avif to gain map heic file and keep base image:
 
 1. using a specific base photo will lead to more information in gain map for correct HDR mapping, resulting in a larger file size (approximately double)
 2. 10 bit heic files are about twice as large as 8 bit files.
- 
-#### \*\* Google Photos compatible with monochrome gain map:
-
-HDR images output using CIImageRepresentationOption.hdrImage will generate RGB gain map. Output image through CIImageRepresentationOption.hdrGainMapImage will generate monochrome gain map. This method will output more slowly and there will be slight changes in brightness, but the file size will be smaller.
+3. \*\* Google Photos compatible with monochrome gain map.
 
 ### heic_hdr.py
 
