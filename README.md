@@ -21,7 +21,7 @@ Options:
 
 -q \<value>: image quality (default: 0.85)
 
--b \<file_path>: specify the base image, which will be output in RGB gain map format.
+-b \<file_path>: specify the base image and output in RGB gain map format.
 
 -f \<format>: export image in heic or jpg (default: heic)
 
@@ -45,9 +45,11 @@ Sample command：
 
  `./PQHDRtoGMHDR ~/Downloads/abc.tiff ~/Documents/ -q 0.80 -f jpg`
  
-convert abc.tiff to gain map heic file and using abc.avif as base image:
+convert gain map abc.avif to gain map heic file and keep base image:
  
- `./PQHDRtoGMHDR ~/Downloads/abc.tiff ~/Documents/ -b ./Downloads/abc.avif` 
+ `./PQHDRtoGMHDR ~/Downloads/abc.avif ~/Documents/ -b ./Downloads/abc.avif` 
+
+Please note: using a specific base photo will lead to more information in gain map for correct HDR mapping, resulting in a larger file size (approximately double)
  
 \*\* Google Photos compatible with monochrome gain map:
 
