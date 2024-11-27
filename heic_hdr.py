@@ -40,7 +40,7 @@ def convert_to_heic(tif_file):
     
     # Build the command with optional arguments
     # You may need to edit exc_path before running!
-    # Sample: command = [‘/home/user/PQHDRtoGMHDR’, input_file_path, output_file_path] + extra_options
+    # Sample: command = [‘/home/user/toGainMapHDR’, input_file_path, output_file_path] + extra_options
     command = [exc_path, input_file_path, output_file_path] + extra_options
 
     # Call the external program PQHDRtoGMHDR

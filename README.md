@@ -4,18 +4,19 @@ A macOS tool for converting HDR files to Adaptive HDR (Gain Map / ISO HDR)
 
 Include:
 
-1. PQHDRtoGMHDR, which convert png, tiff etc. HDR file (in PQ HDR / HLG HDR) to Adaptive HDR (gain map heic file). The program will read a image as both SDR and HDR image, then calculate difference between two images as gain map.
+1. toGainMapHDR, which convert png, tiff etc. HDR file (in PQ HDR / HLG HDR) to Adaptive HDR (gain map heic file). The program will read a image as both SDR and HDR image, then calculate difference between two images as gain map.
 2. heic_hdr.py, a ChatGPT generated python script to convert all TIFF file to HEIC.
+3. GainMapKernel.ci.metallib, library needed to output monochrome gain maps.
 
 GUI program created by @vincenttsang [HDR-Gain-Map-Convert](https://github.com/vincenttsang/HDR-Gain-Map-Convert)
 
 ## Usage
 
-### PQHDRtoGMHDR
+### toGainMapHDR
 
 Convert any HDR to ISO_HDR.heic by PQHDRtoGMHDR:
 
-`./PQHDRtoGMHDR $file_dir $folder_dir $options`
+`./2GainMapHDR $file_dir $folder_dir $options`
 
 #### Options:
 
@@ -27,7 +28,7 @@ Convert any HDR to ISO_HDR.heic by PQHDRtoGMHDR:
 
 -d \<color depth>: output color depth (default: 8)
 
--g: output in monochrome gain map for solving compatibility issue \*\*
+-g: output compatible monochrome gain map (recommanded) \*\*
 
 -s: export tone mapped SDR image without HDR gain map
 
@@ -41,19 +42,23 @@ Convert any HDR to ISO_HDR.heic by PQHDRtoGMHDR:
 
 #### Sample command：
 
- `./PQHDRtoGMHDR ~/Downloads/abc.png ~/Documents/ -q 0.95 -d 10 -c rec2020`
+ `./toGainMapHDR ~/Downloads/abc.png ~/Documents/ -q 0.95 -d 10 -c rec2020`
 
- `./PQHDRtoGMHDR ~/Downloads/abc.tiff ~/Documents/ -q 0.80 -f jpg`
+ `./toGainMapHDR ~/Downloads/abc.tiff ~/Documents/ -q 0.80 -f jpg`
  
 convert gain map abc.avif to gain map heic file and keep base image:
  
- `./PQHDRtoGMHDR ~/Downloads/abc.avif ~/Documents/ -b ./Downloads/abc.avif` 
+ `./toGainMapHDR ~/Downloads/abc.avif ~/Documents/ -b ./Downloads/abc.avif` 
+ 
+convert abc.tiff to compatible monochrome gain map file:
+ 
+ `./toGainMapHDR ~/Downloads/abc.tiff ~/Documents/ -g` 
 
 #### Note: 
 
 1. Using a specific base photo will result larger file size (approximately double)
 2. Exporting 10 bit heic files will result larger file size (approximately double)
-3. \*\* Monochrome gain map compatible with Google Photos.
+3. \*\* Monochrome gain map compatible with Google Photos, Instagram etc.
 
 ### heic_hdr.py
 
@@ -71,7 +76,7 @@ Batch convert all tiff file in a folder by heic_hdr.py:
 
 `python3 ./heic_hdr.py $folder_for_convert $options`
 
-You may need to change DIR of PQHDRtoGMHDR in heic_hdr.py before running. (in line 44)
+You may need to change DIR of toGainMapHDR in heic_hdr.py before running. (in line 44)
 
 #### Sample：
 
