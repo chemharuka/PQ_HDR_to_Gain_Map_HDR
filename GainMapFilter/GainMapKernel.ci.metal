@@ -20,7 +20,7 @@ extern "C" float4 GainMapFilter(coreimage::sample_t hdr, coreimage::sample_t sdr
     float rgb_ratio;
     float gamma_ratio;
     rgb_ratio = ratio(hdr.r+hdr.g+hdr.b,sdr.r+sdr.g+sdr.b);
-    gamma_ratio = 1-1/rgb_ratio;
+    gamma_ratio = log2(rgb_ratio)/log2(2.2)/4;
     return float4(gamma_ratio, gamma_ratio, gamma_ratio, 1.0);
 }
 
