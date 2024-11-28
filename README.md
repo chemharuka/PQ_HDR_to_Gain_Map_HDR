@@ -68,7 +68,7 @@ Batch convert all tiff file in a folder by heic_hdr.py:
 
 `git clone https://github.com/chemharuka/PQ_HDR_to_Gain_Map_HDR.git`
 
-`cd PQ_HDR_to_Gain_Map_HDR`
+`cd PQ_HDR_to_Gain_Map_HDR/bin`
 
 `chmod 711 ./PQHDRtoGMHDR`
 
