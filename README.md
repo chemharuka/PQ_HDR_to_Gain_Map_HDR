@@ -6,7 +6,8 @@ Include:
 
 1. toGainMapHDR, which convert png, tiff etc. HDR file (in PQ HDR / HLG HDR) to Adaptive HDR (gain map heic file). The program will read a image as both SDR and HDR image, then calculate difference between two images as gain map.
 2. heic_hdr.py, a ChatGPT generated python script to convert all TIFF file to HEIC.
-3. GainMapKernel.ci.metallib, library needed to output monochrome gain maps.
+3. GainMapKernel.ci.metallib, library needed to output linear gain map.
+4. gmAdjustKernel.ci.metallib, library needed to generate gain map with correct gamma.
 
 GUI program created by @vincenttsang [HDR-Gain-Map-Convert](https://github.com/vincenttsang/HDR-Gain-Map-Convert)
 
@@ -53,12 +54,17 @@ convert gain map abc.avif to gain map heic file and keep base image:
 convert abc.tiff to compatible monochrome gain map file:
  
  `./toGainMapHDR ~/Downloads/abc.tiff ~/Documents/ -g` 
+ 
+convert RGB gain map file to compatible monochrome gain map heic file:
+
+ `./toGainMapHDR ~/Downloads/abc.heif ~/Documents/ -g` 
 
 #### Note: 
 
 1. Using a specific base photo will result larger file size (approximately double)
 2. Exporting 10 bit heic files will result larger file size (approximately double)
 3. \*\* Monochrome gain map compatible with Google Photos, Instagram etc.
+4. Not support input JPEG/TIFF etc. file with RGB Gain Map.
 
 ### heic_hdr.py
 
@@ -105,6 +111,3 @@ FIXED: ~~HDR headroom was limited to +2 eV, might improve in future.~~
 
 FIXED: ~~Not support HDR preview in Google Photos.~~
 
-Not support input JPEG RGB Gain Map HDR exported by Adobe.
-
-Not support input TIFF Gain Map HDR exported by Adobe.
