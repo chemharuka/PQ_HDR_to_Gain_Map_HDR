@@ -348,9 +348,7 @@ let gain_map_sdr = getGainMap(hdr_input: hdr_image!, sdr_input: tonemapped_sdrim
 
 let gain_map_min_max = areaMinMax(inputImage:gain_map_sdr)
 let gain_map_pixel = areaMaximum(inputImage:gain_map_min_max)
-//let sdr_pixel = areaMaximum(inputImage:areaMinMax(inputImage:tonemapped_sdrimage!))
 let gain_map_pixel_data = extractPixelData(from: ciImageToPixelBuffer(ciImage: gain_map_pixel)!)?.first
-//let sdr_pixel_data = extractPixelData(from: ciImageToPixelBuffer(ciImage: sdr_pixel)!)?.first
 let max_ratio = uint32ToFloat(value:gain_map_pixel_data!)
 let stops = pow(max_ratio,2.2)*4.0
 let headroom = pow(2.0,stops)

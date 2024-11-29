@@ -35,9 +35,9 @@ Convert any HDR to ISO_HDR.heic by PQHDRtoGMHDR:
 
 -j: export image in JPEG format
 
--p: export 10 bits PQ HDR heic image
+-p: export 10-bit PQ HDR heic image
 
--h: export HLG HDR heic image (default in 10bit)
+-h: export HLG HDR heic image (default in 10-bit)
 
 -help: print help information
 
@@ -55,16 +55,17 @@ convert abc.tiff to compatible monochrome gain map file:
  
  `./toGainMapHDR ~/Downloads/abc.tiff ~/Documents/ -g` 
  
-convert RGB gain map file to compatible monochrome gain map heic file:
+convert RGB gain map file to compatible monochrome gain map heic file (rename it as heif to avoid overwrite):
 
  `./toGainMapHDR ~/Downloads/abc.heif ~/Documents/ -g` 
 
 #### Note: 
 
 1. Using a specific base photo will result larger file size (approximately double)
-2. Exporting 10 bit heic files will result larger file size (approximately double)
+2. Exporting 10-bit heic files will result larger file size (approximately double)
 3. \*\* Monochrome gain map compatible with Google Photos, Instagram etc.
-4. Not support input JPEG/TIFF etc. file with RGB Gain Map.
+4. Not support input JPEG/TIFF file with RGB Gain Map.
+5. When exporting 8-bit heic photo, color discontinuity may occur in low-texture areas.
 
 ### heic_hdr.py
 
@@ -78,7 +79,7 @@ Batch convert all tiff file in a folder by heic_hdr.py:
 
 `chmod 711 ./PQHDRtoGMHDR`
 
-2. run heic_hdr.py (default run with 8 threads, change it accroding to your chip's big core.)
+2. run heic_hdr.py (default run with 8 threads, change it accroding to your chip's performance core.)
 
 `python3 ./heic_hdr.py $folder_for_convert $options`
 
