@@ -245,7 +245,7 @@ if !gain_map_mono {
 }
 
 // export monochrome gain map photo which compatible with Google Photos, instagram etc.
-/*
+
 
 func areaMinMax(inputImage: CIImage) -> CIImage {
     let filter = CIFilter.areaMinMax()
@@ -265,28 +265,17 @@ func areaMaximum(inputImage: CIImage) -> CIImage {
      return filter.outputImage!
 }
 
-func exposureAdjust(inputImage: CIImage, inputEV: Float) -> CIImage {
-    let exposureAdjustFilter = CIFilter.exposureAdjust()
-    exposureAdjustFilter.inputImage = inputImage
-    exposureAdjustFilter.ev = inputEV
-    return exposureAdjustFilter.outputImage!
-}
-
-func gammaAdjust(inputImage: CIImage) -> CIImage {
-    let gammaAdjustFilter = CIFilter.gammaAdjust()
-    gammaAdjustFilter.inputImage = inputImage
-    gammaAdjustFilter.power = 1/2.2
-    return gammaAdjustFilter.outputImage!
-}
+/*
 
 func hdrtosdr(inputImage: CIImage) -> CIImage {
     let imagedata = ctx.tiffRepresentation(of: inputImage,
                                            format: CIFormat.RGBA8,
-                                           colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!
+                                           colorSpace: CGColorSpace(name: CGColorSpace.linearSRGB)!
     )
     let sdrimage = CIImage(data: imagedata!)
     return sdrimage!
 }
+ */
 
 func ciImageToPixelBuffer(ciImage: CIImage) -> CVPixelBuffer? {
     let attributes: [String: Any] = [
@@ -330,14 +319,15 @@ func extractPixelData(from pixelBuffer: CVPixelBuffer) -> [UInt32]? {
     return pixelArray
 }
 
+
 private func AdjustGainMap(inputImage: CIImage, inputEV: Float) -> CIImage {
-    let filter = evAdjustFilter()
+    let filter = gmAdjustFilter()
     filter.inputImage = inputImage
     filter.inputEV = inputEV
     let outputImage = filter.outputImage
     return outputImage!
 }
- */
+
 
 private func getGainMap(hdr_input: CIImage,sdr_input: CIImage) -> CIImage {
     let filter = GainMapFilter()
@@ -352,24 +342,36 @@ func uint32ToFloat(value: UInt32) -> Float {
     return Float(value) / Float(UInt32.max)
 }
 
-let gain_map = getGainMap(hdr_input: hdr_image!, sdr_input: tonemapped_sdrimage!).applyingFilter("CIToneMapHeadroom", parameters: ["inputSourceHeadroom":1.0,"inputTargetHeadroom":1.0])
+let gain_map = getGainMap(hdr_input: hdr_image!, sdr_input: tonemapped_sdrimage!)
+let gain_map_sdr = getGainMap(hdr_input: hdr_image!, sdr_input: tonemapped_sdrimage!).applyingFilter("CIToneMapHeadroom", parameters: ["inputSourceHeadroom":1.0,"inputTargetHeadroom":1.0])
 
-/*
-let gain_map_min_max = areaMinMax(inputImage:gain_map)
+
+let gain_map_min_max = areaMinMax(inputImage:gain_map_sdr)
 let gain_map_pixel = areaMaximum(inputImage:gain_map_min_max)
 //let sdr_pixel = areaMaximum(inputImage:areaMinMax(inputImage:tonemapped_sdrimage!))
 let gain_map_pixel_data = extractPixelData(from: ciImageToPixelBuffer(ciImage: gain_map_pixel)!)?.first
 //let sdr_pixel_data = extractPixelData(from: ciImageToPixelBuffer(ciImage: sdr_pixel)!)?.first
 let max_ratio = uint32ToFloat(value:gain_map_pixel_data!)
-let headroom = 16.0*max_ratio
-let stops = log2(headroom)
+let stops = pow(max_ratio,2.2)*4.0
+let headroom = pow(2.0,stops)
+
+let gain_map_adj = AdjustGainMap(inputImage: gain_map, inputEV: headroom + pow(10,-5)).applyingFilter("CIToneMapHeadroom", parameters: ["inputSourceHeadroom":1.0,"inputTargetHeadroom":1.0])
+
+/*
+let gain_map_adj_min_max = areaMinMax(inputImage:gain_map_adj)
+let gain_map_adj_pixel = areaMaximum(inputImage:gain_map_adj_min_max)
+//let sdr_pixel = areaMaximum(inputImage:areaMinMax(inputImage:tonemapped_sdrimage!))
+let gain_map_adj_pixel_data = extractPixelData(from: ciImageToPixelBuffer(ciImage: gain_map_adj_pixel)!)?.first
+//let sdr_pixel_data = extractPixelData(from: ciImageToPixelBuffer(ciImage: sdr_pixel)!)?.first
+let adj_max_ratio = uint32ToFloat(value:gain_map_adj_pixel_data!)
 print("\(max_ratio)")
 print("\(headroom)")
 print("\(stops)")
+print("\(adj_max_ratio)")
+ */
 
-
-
-let gain_map_ev = AdjustGainMap(inputImage: gain_map, inputEV: (1.0/max_ratio) - pow(10,-5))
+var imageProperties = hdr_image!.properties
+var makerApple = imageProperties[kCGImagePropertyMakerAppleDictionary as String] as? [String: Any] ?? [:]
 
 switch stops {
 case let x where x >= 2.303:
@@ -385,19 +387,16 @@ default:
     makerApple["33"] = 0.0
     makerApple["48"] = (1.601 - stops)/0.101
 }
- */
 
 
-var imageProperties = hdr_image!.properties
-var makerApple = imageProperties[kCGImagePropertyMakerAppleDictionary as String] as? [String: Any] ?? [:]
+/*
 makerApple["33"] = 1.0
 makerApple["48"] = (3.0 - 4.0)/70.0
-
+*/
 imageProperties[kCGImagePropertyMakerAppleDictionary as String] = makerApple
 let modifiedImage = tonemapped_sdrimage!.settingProperties(imageProperties)
 
-
-let alt_export_options = NSDictionary(dictionary:[kCGImageDestinationLossyCompressionQuality:imagequality ?? 0.85, CIImageRepresentationOption.hdrGainMapImage:gain_map])
+let alt_export_options = NSDictionary(dictionary:[kCGImageDestinationLossyCompressionQuality:imagequality ?? 0.85, CIImageRepresentationOption.hdrGainMapImage:gain_map_adj])
 if jpg_export {
     try! ctx.writeJPEGRepresentation(of: modifiedImage,
                                      to: url_export_jpg,

@@ -16,10 +16,10 @@ extern "C" float4 GainMapFilter(coreimage::sample_t hdr, coreimage::sample_t sdr
     float ratio;
     float hdr_ave;
     float sdr_ave;
-    hdr_ave = (hdr.r+hdr.g+hdr.b)/3 + pow(10.0,-5.0);
-    sdr_ave = (sdr.r+sdr.g+sdr.b)/3 + pow(10.0,-5.0);
+    hdr_ave = (hdr.r+hdr.g+hdr.b)/3.0 + pow(10.0,-5.0);
+    sdr_ave = (sdr.r+sdr.g+sdr.b)/3.0 + pow(10.0,-5.0);
     ratio = hdr_ave/sdr_ave;
-    gamma_ratio = log2(ratio)/4/log2(2.2);
+    gamma_ratio = log2(ratio)/4.0;
     return float4(gamma_ratio, gamma_ratio, gamma_ratio, 1.0);
 }
 
