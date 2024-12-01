@@ -15,21 +15,24 @@ GUI program created by @vincenttsang [HDR-Gain-Map-Convert](https://github.com/v
 
 ### toGainMapHDR
 
-Convert any HDR to ISO_HDR.heic by PQHDRtoGMHDR:
+Convert any HDR Files to Gain_Map_HDR.heic by toGainMapHDR:
 
-`./2GainMapHDR $file_dir $folder_dir $options`
+`./toGainMapHDR $file_dir $folder_dir $options`
 
 Supported input format:
 
 AVIF、JXL、HEIF (in PQ/HLG/Gain map)
 
-TIFF (in PQ/HLG)
+TIFF (in PQ/HLG/Linear32)
+
+PNG (in PQ/HLG)
 
 JPG (gain map)
 
-EXR
+EXR、HDR
+#### System Require
 
-Require macOS 18.0+, PLEASE UPGRADE your system to LATEST version for more compatibility.
+Require macOS 15.0+ (Some format support require 15.1+), PLEASE UPGRADE your system to LATEST version for more compatibility.
 
 #### Options:
 
@@ -80,7 +83,7 @@ convert RGB gain map file to compatible monochrome gain map heic file (rename it
 
 ### heic_hdr.py
 
-Batch convert all tiff file in a folder by heic_hdr.py:
+Batch convert all tiff files in a folder by heic_hdr.py:
 
 1. Download all files in a folder:
 
@@ -94,7 +97,7 @@ Batch convert all tiff file in a folder by heic_hdr.py:
 
 `python3 ./heic_hdr.py $folder_for_convert $options`
 
-You may need to change DIR of toGainMapHDR in heic_hdr.py before running. (in line 44)
+You may need to change the DIR of toGainMapHDR in heic_hdr.py before running. (in line 44)
 
 #### Sample：
 
