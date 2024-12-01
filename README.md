@@ -21,15 +21,12 @@ Convert any HDR Files to Gain_Map_HDR.heic by toGainMapHDR:
 
 Supported input format:
 
-AVIF、JXL、HEIF (in PQ/HLG/Gain map)
+* AVIF、JXL、HEIF (in PQ/HLG/Gain map)
+* TIFF (in PQ/HLG/Linear32)
+* PNG (in PQ/HLG)
+* JPG (gain map)
+* EXR、HDR
 
-TIFF (in PQ/HLG/Linear32)
-
-PNG (in PQ/HLG)
-
-JPG (gain map)
-
-EXR、HDR
 #### System Require
 
 Require macOS 15.0+ (Some format support require 15.1+), PLEASE UPGRADE your system to LATEST version for more compatibility.
