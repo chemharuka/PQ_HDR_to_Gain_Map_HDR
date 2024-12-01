@@ -19,6 +19,18 @@ Convert any HDR to ISO_HDR.heic by PQHDRtoGMHDR:
 
 `./2GainMapHDR $file_dir $folder_dir $options`
 
+Supported input format:
+
+AVIF、JXL、HEIF (in PQ/HLG/Gain map)
+
+TIFF (in PQ/HLG)
+
+JPG (gain map)
+
+EXR
+
+Require macOS 18.0+, PLEASE UPGRADE your system to LATEST version for more compatibility.
+
 #### Options:
 
 -q \<value>: image quality (default: 0.85)
@@ -64,8 +76,7 @@ convert RGB gain map file to compatible monochrome gain map heic file (rename it
 1. Using a specific base photo will result larger file size (approximately double)
 2. Exporting 10-bit heic files will result larger file size (approximately double)
 3. \*\* Monochrome gain map compatible with Google Photos, Instagram etc. Recommended to use for sharing.
-4. Not support input JPEG file with RGB Gain Map. Not support input TIFF or JXL file with gain map.
-5. When exporting 8-bit heic photo, color discontinuity may occur in low-texture areas, like clouds, lakes.
+4. When exporting 8-bit heic photo, color discontinuity may occur in low-texture areas, like clouds, lakes.
 
 ### heic_hdr.py
 
