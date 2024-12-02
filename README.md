@@ -1,10 +1,10 @@
 # Convert HDR files to Gain Map HDR
 
-A macOS tool for converting HDR files to Adaptive HDR (Gain Map / ISO HDR)
+A macOS tool for converting HDR files to Adaptive (Gain Map) HDR / ISO HDR.
 
 Include:
 
-1. toGainMapHDR, which convert png, tiff etc. HDR file (in PQ HDR / HLG HDR) to Adaptive HDR (gain map heic file). The program will read a image as both SDR and HDR image, then calculate difference between two images as gain map.
+1. toGainMapHDR, which convert png, tiff etc. HDR file to Adaptive HDR (gain map heic file) / ISO HDR (PQ or HLG curve image). The program will read a image as both SDR and HDR image, then calculate difference between two images as gain map.
 2. heic_hdr.py, a ChatGPT generated python script to convert all TIFF file to HEIC.
 3. GainMapKernel.ci.metallib, library needed to output linear gain map.
 4. gmAdjustKernel.ci.metallib, library needed to generate gain map with correct gamma.
@@ -67,9 +67,13 @@ convert abc.tiff to compatible monochrome gain map file:
  
  `./toGainMapHDR ~/Downloads/abc.tiff ~/Documents/ -g` 
  
-convert RGB gain map file to compatible monochrome gain map heic file (rename it as heif to avoid overwrite):
+convert abc.tiff to HLG HDR file:
+ 
+ `./toGainMapHDR ~/Downloads/abc.tiff ~/Documents/ -h` 
+ 
+convert RGB gain map file to compatible monochrome gain map heic file (NOTE: rename it as heif to avoid overwrite in same folder):
 
- `./toGainMapHDR ~/Downloads/abc.heif ~/Documents/ -g` 
+ `./toGainMapHDR ~/Downloads/abc.heif ~/Downloads/ -g` 
 
 #### Note: 
 
@@ -84,11 +88,11 @@ Batch convert all tiff files in a folder by heic_hdr.py:
 
 1. Download all files in a folder:
 
-`git clone https://github.com/chemharuka/PQ_HDR_to_Gain_Map_HDR.git`
+`git clone https://github.com/chemharuka/toGainMapHDR.git`
 
-`cd PQ_HDR_to_Gain_Map_HDR/bin`
+`cd toGainMapHDR/bin`
 
-`chmod 711 ./PQHDRtoGMHDR`
+`chmod 711 ./toGainMapHDR`
 
 2. run heic_hdr.py (default run with 8 threads, change it accroding to your chip's performance core.)
 
@@ -98,7 +102,7 @@ You may need to change the DIR of toGainMapHDR in heic_hdr.py before running. (i
 
 #### Sample：
 
-`python3 ./heic_hdr.py ~/Documents/export/ -q 0.90 -c rec2020`
+`python3 ./heic_hdr.py ~/Documents/export/ -q 0.90 -c rec2020 -g`
 
 #### Note: 
 
