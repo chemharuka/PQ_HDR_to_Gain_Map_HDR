@@ -41,7 +41,7 @@ Require macOS 15.0+ (Some format support require 15.1+), PLEASE UPGRADE your sys
 
 -d \<color depth>: output color depth (default: 8)
 
--g: output compatible monochrome gain map (recommanded) \*\*
+-g: output Apple gain map (monochrome) \*\*
 
 -s: export tone mapped SDR image without HDR gain map
 
@@ -79,7 +79,7 @@ convert RGB gain map file to compatible monochrome gain map heic file (NOTE: ren
 
 1. Using a specific base photo will result larger file size (approximately double)
 2. Exporting 10-bit heic files will result larger file size (approximately double)
-3. \*\* Monochrome gain map compatible with Google Photos, Instagram etc. Recommended to use for sharing.
+3. \*\* Monochrome gain map compatible with Google Photos (Android version), Instagram etc. Recommended to use for sharing.
 4. When exporting 8-bit heic photo, color discontinuity may occur in low-texture areas, like clouds, lakes.
 
 ### heic_hdr.py
