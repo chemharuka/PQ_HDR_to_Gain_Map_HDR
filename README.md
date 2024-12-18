@@ -41,7 +41,7 @@ Require macOS 15.0+ (Some format support require 15.1+), PLEASE UPGRADE your sys
 
 -d \<color depth>: output color depth (default: 8)
 
--g: output Apple gain map (monochrome) \*\*
+-g: output Apple HDR (monochrome gain map) \*\*
 
 -s: export tone mapped SDR image without HDR gain map
 
@@ -63,7 +63,7 @@ convert gain map abc.avif to gain map heic file and keep base image:
  
  `./toGainMapHDR ~/Downloads/abc.avif ~/Documents/ -b ./Downloads/abc.avif` 
  
-convert abc.tiff to compatible monochrome gain map file:
+convert abc.tiff to Apple gain map HDR file:
  
  `./toGainMapHDR ~/Downloads/abc.tiff ~/Documents/ -g` 
  
@@ -71,7 +71,7 @@ convert abc.tiff to HLG HDR file:
  
  `./toGainMapHDR ~/Downloads/abc.tiff ~/Documents/ -h` 
  
-convert RGB gain map file to compatible monochrome gain map heic file (NOTE: rename it as heif to avoid overwrite in same folder):
+convert RGB gain map (adaptive HDR) file to monochrome gain map (Apple HDR) heic file (NOTE: rename it as heif to avoid overwrite in same folder):
 
  `./toGainMapHDR ~/Downloads/abc.heif ~/Downloads/ -g` 
 
