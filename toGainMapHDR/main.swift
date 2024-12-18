@@ -18,7 +18,6 @@ guard arguments.count > 2 else {
     exit(1)
 }
 
-
 let url_hdr = URL(fileURLWithPath: arguments[1])
 let filename = url_hdr.deletingPathExtension().appendingPathExtension("heic").lastPathComponent
 let filename_jpg = url_hdr.deletingPathExtension().appendingPathExtension("jpg").lastPathComponent
@@ -171,10 +170,32 @@ if jpg_export && bit_depth == CIFormat.RGB10 {print("Warning: Color depth will b
 if pq_export && eight_bit {print("Warning: Color depth will be 10 when exporting PQ HDR.")}
 
 
+// export hlg and pq hdr file
+while hlg_export{
+    let hlg_export_options = NSDictionary(dictionary:[kCGImageDestinationLossyCompressionQuality:imagequality ?? 0.85])
+    if !eight_bit {bit_depth = CIFormat.RGB10}
+    try! ctx.writeHEIFRepresentation(of: hdr_image!,
+                                     to: url_export_heic,
+                                     format: bit_depth,
+                                     colorSpace: CGColorSpace(name: hlg_color_space)!,
+                                     options:hlg_export_options as! [CIImageRepresentationOption : Any])
+    exit(0)
+}
+
+while pq_export {
+    let pq_export_options = NSDictionary(dictionary:[kCGImageDestinationLossyCompressionQuality:imagequality ?? 0.85])
+    try! ctx.writeHEIF10Representation(of: hdr_image!,
+                                       to: url_export_heic,
+                                       colorSpace: CGColorSpace(name: hdr_color_space)!,
+                                       options:pq_export_options as! [CIImageRepresentationOption : Any])
+    exit(0)
+}
+
+// export gain map hdr file
+
 let export_options = NSDictionary(dictionary:[kCGImageDestinationLossyCompressionQuality:imagequality ?? 0.85, CIImageRepresentationOption.hdrImage:hdr_image!])
 
 var tonemapped_sdrimage : CIImage?
-
 tonemapped_sdrimage = hdr_image?.applyingFilter("CIToneMapHeadroom", parameters: ["inputSourceHeadroom":16.0,"inputTargetHeadroom":1.0])
 
 if base_image_bool{
@@ -208,26 +229,6 @@ while sdr_export{
     exit(0)
 }
 
-while hlg_export{
-    let hlg_export_options = NSDictionary(dictionary:[kCGImageDestinationLossyCompressionQuality:imagequality ?? 0.85])
-    if !eight_bit {bit_depth = CIFormat.RGB10}
-    try! ctx.writeHEIFRepresentation(of: hdr_image!,
-                                     to: url_export_heic,
-                                     format: bit_depth,
-                                     colorSpace: CGColorSpace(name: hlg_color_space)!,
-                                     options:hlg_export_options as! [CIImageRepresentationOption : Any])
-    exit(0)
-}
-
-while pq_export {
-    let pq_export_options = NSDictionary(dictionary:[kCGImageDestinationLossyCompressionQuality:imagequality ?? 0.85])
-    try! ctx.writeHEIF10Representation(of: hdr_image!,
-                                       to: url_export_heic,
-                                       colorSpace: CGColorSpace(name: hdr_color_space)!,
-                                       options:pq_export_options as! [CIImageRepresentationOption : Any])
-    exit(0)
-}
-
 if !gain_map_mono {
     if jpg_export {
         try! ctx.writeJPEGRepresentation(of: tonemapped_sdrimage!,
@@ -245,7 +246,6 @@ if !gain_map_mono {
 }
 
 // export monochrome gain map photo which compatible with Google Photos, instagram etc.
-
 
 func areaMinMax(inputImage: CIImage) -> CIImage {
     let filter = CIFilter.areaMinMax()
@@ -328,7 +328,6 @@ private func AdjustGainMap(inputImage: CIImage, inputEV: Float) -> CIImage {
     return outputImage!
 }
 
-
 private func getGainMap(hdr_input: CIImage,sdr_input: CIImage) -> CIImage {
     let filter = GainMapFilter()
     filter.HDRImage = hdr_input
@@ -337,14 +336,12 @@ private func getGainMap(hdr_input: CIImage,sdr_input: CIImage) -> CIImage {
     return outputImage!
 }
 
-
 func uint32ToFloat(value: UInt32) -> Float {
     return Float(value) / Float(UInt32.max)
 }
 
 let gain_map = getGainMap(hdr_input: hdr_image!, sdr_input: tonemapped_sdrimage!)
-let gain_map_sdr = getGainMap(hdr_input: hdr_image!, sdr_input: tonemapped_sdrimage!).applyingFilter("CIToneMapHeadroom", parameters: ["inputSourceHeadroom":1.0,"inputTargetHeadroom":1.0])
-
+let gain_map_sdr = gain_map.applyingFilter("CIToneMapHeadroom", parameters: ["inputSourceHeadroom":1.0,"inputTargetHeadroom":1.0])
 
 let gain_map_min_max = areaMinMax(inputImage:gain_map_sdr)
 let gain_map_pixel = areaMaximum(inputImage:gain_map_min_max)
@@ -353,7 +350,11 @@ let max_ratio = uint32ToFloat(value:gain_map_pixel_data!)
 let stops = pow(max_ratio,2.2)*4.0
 let headroom = pow(2.0,stops)
 
-let gain_map_adj = AdjustGainMap(inputImage: gain_map, inputEV: headroom + pow(10,-5)).applyingFilter("CIToneMapHeadroom", parameters: ["inputSourceHeadroom":1.0,"inputTargetHeadroom":1.0])
+if headroom <= 2.03 {
+    print("Warning: Suggest to export \(arguments[1]) as SDR image")
+}
+
+let gain_map_adj = AdjustGainMap(inputImage: gain_map, inputEV: headroom).applyingFilter("CIToneMapHeadroom", parameters: ["inputSourceHeadroom":1.0,"inputTargetHeadroom":1.0])
 
 /*
 let gain_map_adj_min_max = areaMinMax(inputImage:gain_map_adj)
@@ -385,7 +386,6 @@ default:
     makerApple["33"] = 0.0
     makerApple["48"] = (1.601 - stops)/0.101
 }
-
 
 /*
 makerApple["33"] = 1.0
