@@ -37,6 +37,8 @@ Require macOS 15.0+ (Some format support require 15.1+), PLEASE UPGRADE your sys
 
 -b \<file_path>: specify the base image and output in RGB gain map format.
 
+-t \<text>: add extra text after the output file name.
+
 -c \<color space>: output color space (srgb, p3, rec2020), default use source file's color space.
 
 -d \<color depth>: output color depth (default: 8)
@@ -71,9 +73,9 @@ convert abc.tiff to HLG HDR file:
  
  `./toGainMapHDR ~/Downloads/abc.tiff ~/Documents/ -h` 
  
-convert RGB gain map (adaptive HDR) file to monochrome gain map (Apple HDR) heic file (NOTE: rename it as heif to avoid overwrite in same folder):
+convert RGB gain map (adaptive HDR) file to monochrome gain map (Apple HDR) heic file:
 
- `./toGainMapHDR ~/Downloads/abc.heif ~/Downloads/ -g` 
+ `./toGainMapHDR ~/Downloads/abc.heic ~/Downloads/ -g -t -mono` 
 
 #### Note: 
 
