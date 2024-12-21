@@ -41,7 +41,7 @@ Require macOS 15.0+ (Some format support require 15.1+), PLEASE UPGRADE your sys
 
 -d \<color depth>: output color depth (default: 8)
 
--g: output Apple HDR (monochrome gain map) \*\*
+-g: output Apple gain map HDR \*\*
 
 -s: export tone mapped SDR image without HDR gain map
 
@@ -110,6 +110,8 @@ You may need to change the DIR of toGainMapHDR in heic_hdr.py before running. (i
 
 ## Sample
 
+Sample Apple Gain Map HDR files:
+
 sample 1:
 ![DJI_1_0616_D](https://github.com/user-attachments/assets/d4fd48bb-6561-496f-b1ab-083ee1ae8a95)
 
@@ -120,6 +122,8 @@ sample 3:
 ![DJI_1_0927_D](https://github.com/user-attachments/assets/66da879e-d56a-4bae-8185-d2d7d462e10f)
 
 ## Notes
+
+When using an Apple Gain Map HDR image as input, the image brightness is incorrect. This is a problem with the system's built-in function and may be fixed in a future system version.
 
 FIXED: ~~It's better to limit PQ HDR range in +2 eV, to avoid losing hightlight details.~~
 

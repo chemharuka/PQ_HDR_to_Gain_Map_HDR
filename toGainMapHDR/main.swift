@@ -11,7 +11,7 @@ import CoreImage.CIFilterBuiltins
 import CoreVideo
 
 let ctx = CIContext()
-let help_info = "Usage: PQHDRtoGMHDR <source file> <destination folder> <options>\n       options:\n         -q <value>: image quality (default: 0.85)\n         -b <base_photo>: specify the base photo and output in RGB gain map format\n         -c <color space>: specify output color space (srgb, p3, rec2020)\n         -d <color depth>: specify output color depth (default: 8)\n         -g: output monochrome gain map for solving compatibility issue\n         -s: export tone mapped SDR image without HDR gain map\n         -p: export 10bit PQ HDR heic image\n         -h: export HLG HDR heic image (default in 10bit)\n         -j : export image in JPEG format\n         -help: print help information"
+let help_info = "Usage: PQHDRtoGMHDR <source file> <destination folder> <options>\n       options:\n         -q <value>: image quality (default: 0.85)\n         -b <base_photo>: specify the base photo and output in RGB gain map format\n         -t <text>: Add extra text after the output file name\n         -c <color space>: specify output color space (srgb, p3, rec2020)\n         -d <color depth>: specify output color depth (default: 8)\n         -g: output Apple gain map (monochrome) for solving compatibility issue\n         -s: export tone mapped SDR image without HDR gain map\n         -p: export 10bit PQ HDR heic image\n         -h: export HLG HDR heic image (default in 10bit)\n         -j : export image in JPEG format\n         -help: print help information"
 let arguments = CommandLine.arguments
 guard arguments.count > 2 else {
     print(help_info)
@@ -19,11 +19,11 @@ guard arguments.count > 2 else {
 }
 
 let url_hdr = URL(fileURLWithPath: arguments[1])
-let filename = url_hdr.deletingPathExtension().appendingPathExtension("heic").lastPathComponent
-let filename_jpg = url_hdr.deletingPathExtension().appendingPathExtension("jpg").lastPathComponent
-let path_export = URL(fileURLWithPath: arguments[2])
-let url_export_heic = path_export.appendingPathComponent(filename)
-let url_export_jpg = path_export.appendingPathComponent(filename_jpg)
+var filename: String?
+var filename_jpg: String?
+filename = url_hdr.deletingPathExtension().appendingPathExtension("heic").lastPathComponent
+filename_jpg = url_hdr.deletingPathExtension().appendingPathExtension("jpg").lastPathComponent
+
 let imageoptions = arguments.dropFirst(3)
 var base_image_url : URL?
 
@@ -42,6 +42,7 @@ if hdr_image == nil {
     print("Error: No input image found.")
     exit(1)
 }
+
 
 var sdr_color_space = CGColorSpace.displayP3
 var hdr_color_space = CGColorSpace.displayP3_PQ
@@ -123,6 +124,15 @@ while index < imageoptions.count {
             print("Error: Color depth must be either 8 or 10.")
             exit (1)
         }}
+    case "-t":
+        guard index + 1 < imageoptions.count else {
+            print("Error: The -n option requires a argument.")
+            exit(1)
+        }
+        let additional_filename = String(arguments[index + 4])
+        filename = URL(string: url_hdr.deletingPathExtension().absoluteString+additional_filename)!           .appendingPathExtension("heic").lastPathComponent
+        filename_jpg = URL(string: url_hdr.deletingPathExtension().absoluteString+additional_filename)!           .appendingPathExtension("jpg").lastPathComponent
+        index += 1
     case "-c":
         guard index + 1 < imageoptions.count else {
             print("Error: The -c option requires color space argument.")
@@ -156,6 +166,11 @@ while index < imageoptions.count {
     }
     index += 1
 }
+
+
+let path_export = URL(fileURLWithPath: arguments[2])
+let url_export_heic = path_export.appendingPathComponent(filename!)
+let url_export_jpg = path_export.appendingPathComponent(filename_jpg!)
 
 if [pq_export, hlg_export, sdr_export, gain_map_mono, base_image_bool].filter({$0}).count >= 2 {
     print("Error: Only one export format can be used.")
@@ -274,15 +289,22 @@ func uint16ToFloat(value: UInt16) -> Float {
     return Float(value) / Float(UInt16.max)
 }
 
+// calculate HDR headroom
+
 let hdr_max = getHDRmax(hdr_input: hdr_image!).applyingFilter("CIToneMapHeadroom", parameters: ["inputSourceHeadroom":1.0,"inputTargetHeadroom":1.0])
 let hdr_min_max = areaMinMax(inputImage:hdr_max)
 let hdr_max_pixel = areaMaximum(inputImage:hdr_min_max)
 let hdr_max_pixel_data = extractPixelData(from: ciImageToPixelBuffer(ciImage: hdr_max_pixel)!)
-let hdr_max_pixel_data_max = max(hdr_max_pixel_data!.r, hdr_max_pixel_data!.g,hdr_max_pixel_data!.b)
+let hdr_max_pixel_data_max = max(hdr_max_pixel_data!.r, hdr_max_pixel_data!.g, hdr_max_pixel_data!.b)
 let hdr_max_value = uint16ToFloat(value:hdr_max_pixel_data_max)
-let hdr_stops = pow(hdr_max_value,1/0.3)*4.0
-let hdr_headroom = pow(2.0, hdr_stops)
-let pic_headroom = max(2.0, hdr_headroom)
+
+let hdr_headroom = pow(2.0, -16.7702 + 20.209*hdr_max_value) + 4.88701*hdr_max_value + 0.2935 //empirical
+
+let pic_headroom = min(max(2.0, hdr_headroom),16.0)
+
+//print("hdr_max_value=\(hdr_max_value)")
+//print("pic_headroom=\(pic_headroom)")
+
 
 if hdr_headroom < 1.2{
     var result: String
@@ -356,7 +378,6 @@ func hdrtosdr(inputImage: CIImage) -> CIImage {
 let gain_map = getGainMap(hdr_input: hdr_image!, sdr_input: tonemapped_sdrimage!, hdr_max: pic_headroom)
 let gain_map_sdr = gain_map.applyingFilter("CIToneMapHeadroom", parameters: ["inputSourceHeadroom":1.0,"inputTargetHeadroom":1.0])
 let stops = log2(pic_headroom)
-
 var imageProperties = hdr_image!.properties
 var makerApple = imageProperties[kCGImagePropertyMakerAppleDictionary as String] as? [String: Any] ?? [:]
 
