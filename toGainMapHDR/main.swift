@@ -195,9 +195,106 @@ while pq_export {
 
 let export_options = NSDictionary(dictionary:[kCGImageDestinationLossyCompressionQuality:imagequality ?? 0.85, CIImageRepresentationOption.hdrImage:hdr_image!])
 
-var tonemapped_sdrimage : CIImage?
-tonemapped_sdrimage = hdr_image?.applyingFilter("CIToneMapHeadroom", parameters: ["inputSourceHeadroom":16.0,"inputTargetHeadroom":1.0])
 
+// CIFilter and custom filter
+
+func areaMinMax(inputImage: CIImage) -> CIImage {
+    let filter = CIFilter.areaMinMax()
+    filter.inputImage = inputImage
+    filter.extent = inputImage.extent
+    return filter.outputImage!
+}
+
+func areaMaximum(inputImage: CIImage) -> CIImage {
+    let filter = CIFilter.areaMaximum()
+    filter.inputImage = inputImage
+    filter.extent = CGRect(
+        x: 1,
+        y: 0,
+        width: 1,
+        height: 1)
+     return filter.outputImage!
+}
+
+func ciImageToPixelBuffer(ciImage: CIImage) -> CVPixelBuffer? {
+    let attributes: [String: Any] = [
+        kCVPixelBufferCGImageCompatibilityKey as String: true,
+        kCVPixelBufferCGBitmapContextCompatibilityKey as String: true
+    ]
+    var pixelBuffer: CVPixelBuffer?
+    let status = CVPixelBufferCreate(
+        kCFAllocatorDefault,
+        1,
+        1,
+        kCVPixelFormatType_64RGBALE,
+        attributes as CFDictionary,
+        &pixelBuffer
+    )
+    guard status == kCVReturnSuccess, let buffer = pixelBuffer else {
+        return nil
+    }
+    ctx.render(ciImage, to: buffer)
+    return buffer
+}
+
+func extractPixelData(from pixelBuffer: CVPixelBuffer) -> (r: UInt16, g: UInt16, b: UInt16)? {
+    CVPixelBufferLockBaseAddress(pixelBuffer, .readOnly)
+    defer {
+        CVPixelBufferUnlockBaseAddress(pixelBuffer, .readOnly)
+    }
+    
+    guard let baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer) else {
+        return nil
+    }
+    
+    let pixelData = baseAddress.assumingMemoryBound(to: UInt16.self)
+    let r = pixelData[0]
+    let g = pixelData[1]
+    let b = pixelData[2]
+    return (r, g, b)
+}
+
+private func getGainMap(hdr_input: CIImage,sdr_input: CIImage,hdr_max: Float) -> CIImage {
+    let filter = GainMapFilter()
+    filter.HDRImage = hdr_input
+    filter.SDRImage = sdr_input
+    filter.hdrmax = hdr_max
+    let outputImage = filter.outputImage
+    return outputImage!
+}
+
+private func getHDRmax(hdr_input: CIImage) -> CIImage {
+    let filter = HDRmaxFilter()
+    filter.HDRImage = hdr_input
+    let outputImage = filter.outputImage
+    return outputImage!
+}
+
+func uint16ToFloat(value: UInt16) -> Float {
+    return Float(value) / Float(UInt16.max)
+}
+
+let hdr_max = getHDRmax(hdr_input: hdr_image!).applyingFilter("CIToneMapHeadroom", parameters: ["inputSourceHeadroom":1.0,"inputTargetHeadroom":1.0])
+let hdr_min_max = areaMinMax(inputImage:hdr_max)
+let hdr_max_pixel = areaMaximum(inputImage:hdr_min_max)
+let hdr_max_pixel_data = extractPixelData(from: ciImageToPixelBuffer(ciImage: hdr_max_pixel)!)
+let hdr_max_pixel_data_max = max(hdr_max_pixel_data!.r, hdr_max_pixel_data!.g,hdr_max_pixel_data!.b)
+let hdr_max_value = uint16ToFloat(value:hdr_max_pixel_data_max)
+let hdr_stops = pow(hdr_max_value,1/0.3)*4.0
+let hdr_headroom = pow(2.0, hdr_stops)
+let pic_headroom = max(2.0, hdr_headroom)
+
+if hdr_headroom < 1.2{
+    var result: String
+    if let lastSlashIndex = arguments[1].lastIndex(of: "/") {
+        result = String(arguments[1][arguments[1].index(after: lastSlashIndex)...])
+    } else {
+        result = arguments[1]
+    }
+    print("Warning: HDR headroom = \(hdr_headroom), suggest to export \(result) as SDR image")
+}
+
+var tonemapped_sdrimage : CIImage?
 if base_image_bool{
     if CIImage(contentsOf: base_image_url!) == nil {
         print("Warning: Could not load base image, will generate base image by tone mapping.")
@@ -207,10 +304,7 @@ if base_image_bool{
     }
 }
 
-if tonemapped_sdrimage == nil {
-    print("Error: Could not generate tone mapped base image.")
-    exit(1)
-}
+tonemapped_sdrimage = hdr_image?.applyingFilter("CIToneMapHeadroom", parameters: ["inputSourceHeadroom":pic_headroom,"inputTargetHeadroom":1.0])
 
 while sdr_export{
     let sdr_export_options = NSDictionary(dictionary:[kCGImageDestinationLossyCompressionQuality:imagequality ?? 0.85])
@@ -247,26 +341,8 @@ if !gain_map_mono {
 
 // export monochrome gain map photo which compatible with Google Photos, instagram etc.
 
-func areaMinMax(inputImage: CIImage) -> CIImage {
-    let filter = CIFilter.areaMinMax()
-    filter.inputImage = inputImage
-    filter.extent = inputImage.extent
-    return filter.outputImage!
-}
-
-func areaMaximum(inputImage: CIImage) -> CIImage {
-    let filter = CIFilter.areaMaximum()
-    filter.inputImage = inputImage
-    filter.extent = CGRect(
-        x: 1,
-        y: 0,
-        width: 1,
-        height: 1)
-     return filter.outputImage!
-}
 
 /*
-
 func hdrtosdr(inputImage: CIImage) -> CIImage {
     let imagedata = ctx.tiffRepresentation(of: inputImage,
                                            format: CIFormat.RGBA8,
@@ -277,97 +353,9 @@ func hdrtosdr(inputImage: CIImage) -> CIImage {
 }
  */
 
-func ciImageToPixelBuffer(ciImage: CIImage) -> CVPixelBuffer? {
-    let attributes: [String: Any] = [
-        kCVPixelBufferCGImageCompatibilityKey as String: true,
-        kCVPixelBufferCGBitmapContextCompatibilityKey as String: true
-    ]
-    var pixelBuffer: CVPixelBuffer?
-    let status = CVPixelBufferCreate(
-        kCFAllocatorDefault,
-        1,
-        1,
-        kCVPixelFormatType_32ARGB,
-        attributes as CFDictionary,
-        &pixelBuffer
-    )
-    guard status == kCVReturnSuccess, let buffer = pixelBuffer else {
-        return nil
-    }
-    ctx.render(ciImage, to: buffer)
-    return buffer
-}
-
-func extractPixelData(from pixelBuffer: CVPixelBuffer) -> [UInt32]? {
-    CVPixelBufferLockBaseAddress(pixelBuffer, .readOnly)
-    defer {
-        CVPixelBufferUnlockBaseAddress(pixelBuffer, .readOnly)
-    }
-    
-    guard let baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer) else {
-        return nil
-    }
-    
-
-    let pixelData = baseAddress.assumingMemoryBound(to: UInt32.self)
-    let size = 4
-    
-    var pixelArray: [UInt32] = []
-    for i in 0..<size {
-        pixelArray.append(pixelData[i])
-    }
-    return pixelArray
-}
-
-
-private func AdjustGainMap(inputImage: CIImage, inputEV: Float) -> CIImage {
-    let filter = gmAdjustFilter()
-    filter.inputImage = inputImage
-    filter.inputEV = inputEV
-    let outputImage = filter.outputImage
-    return outputImage!
-}
-
-private func getGainMap(hdr_input: CIImage,sdr_input: CIImage) -> CIImage {
-    let filter = GainMapFilter()
-    filter.HDRImage = hdr_input
-    filter.SDRImage = sdr_input
-    let outputImage = filter.outputImage
-    return outputImage!
-}
-
-func uint32ToFloat(value: UInt32) -> Float {
-    return Float(value) / Float(UInt32.max)
-}
-
-let gain_map = getGainMap(hdr_input: hdr_image!, sdr_input: tonemapped_sdrimage!)
+let gain_map = getGainMap(hdr_input: hdr_image!, sdr_input: tonemapped_sdrimage!, hdr_max: pic_headroom)
 let gain_map_sdr = gain_map.applyingFilter("CIToneMapHeadroom", parameters: ["inputSourceHeadroom":1.0,"inputTargetHeadroom":1.0])
-
-let gain_map_min_max = areaMinMax(inputImage:gain_map_sdr)
-let gain_map_pixel = areaMaximum(inputImage:gain_map_min_max)
-let gain_map_pixel_data = extractPixelData(from: ciImageToPixelBuffer(ciImage: gain_map_pixel)!)?.first
-let max_ratio = uint32ToFloat(value:gain_map_pixel_data!)
-let stops = pow(max_ratio,2.2)*4.0
-let headroom = pow(2.0,stops)
-
-if headroom <= 2.03 {
-    print("Warning: Suggest to export \(arguments[1]) as SDR image")
-}
-
-let gain_map_adj = AdjustGainMap(inputImage: gain_map, inputEV: headroom).applyingFilter("CIToneMapHeadroom", parameters: ["inputSourceHeadroom":1.0,"inputTargetHeadroom":1.0])
-
-/*
-let gain_map_adj_min_max = areaMinMax(inputImage:gain_map_adj)
-let gain_map_adj_pixel = areaMaximum(inputImage:gain_map_adj_min_max)
-//let sdr_pixel = areaMaximum(inputImage:areaMinMax(inputImage:tonemapped_sdrimage!))
-let gain_map_adj_pixel_data = extractPixelData(from: ciImageToPixelBuffer(ciImage: gain_map_adj_pixel)!)?.first
-//let sdr_pixel_data = extractPixelData(from: ciImageToPixelBuffer(ciImage: sdr_pixel)!)?.first
-let adj_max_ratio = uint32ToFloat(value:gain_map_adj_pixel_data!)
-print("\(max_ratio)")
-print("\(headroom)")
-print("\(stops)")
-print("\(adj_max_ratio)")
- */
+let stops = log2(pic_headroom)
 
 var imageProperties = hdr_image!.properties
 var makerApple = imageProperties[kCGImagePropertyMakerAppleDictionary as String] as? [String: Any] ?? [:]
@@ -394,7 +382,7 @@ makerApple["48"] = (3.0 - 4.0)/70.0
 imageProperties[kCGImagePropertyMakerAppleDictionary as String] = makerApple
 let modifiedImage = tonemapped_sdrimage!.settingProperties(imageProperties)
 
-let alt_export_options = NSDictionary(dictionary:[kCGImageDestinationLossyCompressionQuality:imagequality ?? 0.85, CIImageRepresentationOption.hdrGainMapImage:gain_map_adj])
+let alt_export_options = NSDictionary(dictionary:[kCGImageDestinationLossyCompressionQuality:imagequality ?? 0.85, CIImageRepresentationOption.hdrGainMapImage:gain_map_sdr])
 if jpg_export {
     try! ctx.writeJPEGRepresentation(of: modifiedImage,
                                      to: url_export_jpg,
@@ -408,6 +396,9 @@ if jpg_export {
                                      options: alt_export_options as! [CIImageRepresentationOption : Any])
 }
 
+//let filename2 = url_hdr.deletingPathExtension().appendingPathExtension("png").lastPathComponent
+//let url_export_heic2 = path_export.appendingPathComponent(filename2)
+//try! ctx.writePNGRepresentation(of: sdr_image!, to: url_export_heic2, format: CIFormat.RGBA8, colorSpace:CGColorSpace(name: CGColorSpace.displayP3)!)
 exit(0)
 // debug
 //let filename2 = url_hdr.deletingPathExtension().appendingPathExtension("png").lastPathComponent
